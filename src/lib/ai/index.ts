@@ -1,29 +1,4 @@
-import type { AiChatParams, NoticeReplyResult } from "./types";
-
-// ─────────────────────────────────────────────────────────
-// UNIVERSAL AI ENGINE
-//
-// Works with ANY AI provider that follows OpenAI API format.
-// Almost every provider in the world uses this format.
-//
-// To switch provider — change these 3 lines in .env.local:
-//   AI_BASE_URL  → provider endpoint
-//   AI_API_KEY   → your API key for that provider
-//   AI_MODEL     → model name
-//
-// Examples:
-//   Anthropic  → https://api.anthropic.com/v1
-//   OpenAI     → https://api.openai.com/v1
-//   Gemini     → https://generativelanguage.googleapis.com/v1beta/openai
-//   DeepSeek   → https://api.deepseek.com/v1
-//   Groq       → https://api.groq.com/openai/v1
-//   Together   → https://api.together.xyz/v1
-//   OpenRouter → https://openrouter.ai/api/v1
-//   Ollama     → http://localhost:11434/v1
-//   Any other  → just use their OpenAI-compatible endpoint
-//
-// Zero code changes needed to switch. Ever.
-// ─────────────────────────────────────────────────────────
+import type { AiChatParams, AiMessage, NoticeReplyResult } from "./types";
 
 async function chat(params: AiChatParams): Promise<string> {
   const baseUrl = process.env.AI_BASE_URL;
@@ -47,7 +22,9 @@ async function chat(params: AiChatParams): Promise<string> {
       max_tokens: params.maxTokens,
       messages: [
         { role: "system", content: params.system },
-        ...params.messages.filter((m) => m.role !== "system"),
+        ...params.messages
+          .filter((m: AiMessage) => m.role !== "system")
+          .map((m: AiMessage) => ({ role: m.role, content: m.content })),
       ],
     }),
   });
@@ -55,7 +32,7 @@ async function chat(params: AiChatParams): Promise<string> {
   if (!response.ok) {
     const error = await response.text();
     throw new Error(
-      `AI request failed. Provider: ${baseUrl}. Status: ${response.status}. Error: ${error}`,
+      `AI request failed. Status: ${response.status}. Error: ${error}`,
     );
   }
 
@@ -86,8 +63,6 @@ async function parseJson<T>(text: string): Promise<T> {
     );
   }
 }
-
-// ─── THE ONLY FUNCTIONS FEATURE CODE EVER CALLS ──────────
 
 export async function generateNoticeReply(params: {
   noticeText: string;
