@@ -1,0 +1,635 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PlanType {
+  STUDENT
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  BETA
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum UserRole {
+  OWNER
+  SENIOR_CA
+  JUNIOR_CA
+  ARTICLE
+}
+
+enum EntityType {
+  INDIVIDUAL
+  PROPRIETORSHIP
+  PARTNERSHIP
+  LLP
+  PRIVATE_LIMITED
+  PUBLIC_LIMITED
+  TRUST
+  HUF
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum DocumentType {
+  FORM_16
+  FORM_16A
+  BANK_STATEMENT
+  GSTR_2B
+  GSTR_1
+  PURCHASE_REGISTER
+  BALANCE_SHEET
+  PL_STATEMENT
+  ITR_COPY
+  PAN_CARD
+  AADHAAR
+  IT_NOTICE
+  GST_NOTICE
+  TDS_CERTIFICATE
+  INVOICE
+  OTHER
+}
+
+enum DocumentSource {
+  CA_UPLOAD
+  CLIENT_PORTAL
+  WHATSAPP
+  EMAIL
+}
+
+enum NoticeType {
+  SCRUTINY_143_2
+  DEFECTIVE_RETURN
+  DEMAND_156
+  RECTIFICATION
+  REFUND_QUERY
+  HIGH_VALUE_TXN
+  GST_ITC_MISMATCH
+  GST_RETURN_DEFAULT
+  GST_SCN
+  TDS_DEFAULT
+  OTHER
+}
+
+enum NoticePortal {
+  INCOME_TAX
+  GST
+  TRACES
+  MCA
+}
+
+enum AiStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ReviewStatus {
+  DRAFT
+  REVIEWED
+  FILED
+}
+
+enum ReconStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+model Firm {
+  id               String    @id @default(uuid())
+  name             String
+  icai_number      String?
+  pan              String?
+  gstin            String?
+  email            String    @unique
+  phone            String?
+  logo_url         String?
+  address          String?
+  website          String?
+  plan_type        PlanType  @default(BETA)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  users            User[]
+  clients          Client[]
+  notifications    Notification[]
+  subscription     Subscription?
+  onboarding       OnboardingState?
+  audit_logs       AuditLog[]
+  support_tickets  SupportTicket[]
+  referrals_made   Referral[]  @relation("ReferrerFirm")
+  referral_used    Referral?   @relation("ReferredFirm")
+  changelog_reads  FirmChangelogRead[]
+  export_requests  DataExportRequest[]
+  deletion_request AccountDeletionRequest?
+
+  @@map("firms")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  firm_id          String
+  firm             Firm      @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  name             String
+  email            String    @unique
+  password_hash    String
+  role             UserRole  @default(JUNIOR_CA)
+  phone            String?
+  is_active        Boolean   @default(true)
+  last_login_at    DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  assigned_clients  Client[]        @relation("AssignedCA")
+  reviewed_notices  Notice[]        @relation("ReviewedBy")
+  sessions          UserSession[]
+  audit_logs        AuditLog[]
+  support_tickets   SupportTicket[]
+  document_requests DocumentRequest[]
+
+  @@index([firm_id])
+  @@map("users")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  firm_id              String             @unique
+  firm                 Firm               @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  plan_type            PlanType
+  billing_cycle        BillingCycle       @default(MONTHLY)
+  status               SubscriptionStatus @default(TRIAL)
+  trial_ends_at        DateTime?
+  current_period_start DateTime?
+  current_period_end   DateTime?
+  grace_period_ends_at DateTime?
+  cancel_at            DateTime?
+  razorpay_sub_id      String?            @unique
+  razorpay_customer_id String?
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
+  invoices             SubscriptionInvoice[]
+
+  @@map("subscriptions")
+}
+
+model SubscriptionInvoice {
+  id                  String        @id @default(uuid())
+  subscription_id     String
+  subscription        Subscription  @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+  firm_id             String
+  invoice_number      String        @unique
+  amount              Float
+  gst_amount          Float
+  total_amount        Float
+  status              InvoiceStatus @default(DRAFT)
+  pdf_r2_key          String?
+  razorpay_payment_id String?
+  period_start        DateTime
+  period_end          DateTime
+  created_at          DateTime      @default(now())
+
+  @@map("subscription_invoices")
+}
+
+model OnboardingState {
+  id                   String    @id @default(uuid())
+  firm_id              String    @unique
+  firm                 Firm      @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  step_add_client      Boolean   @default(false)
+  step_upload_document Boolean   @default(false)
+  step_run_gst_recon   Boolean   @default(false)
+  step_upload_notice   Boolean   @default(false)
+  step_invite_client   Boolean   @default(false)
+  completed_at         DateTime?
+  dismissed_at         DateTime?
+  created_at           DateTime  @default(now())
+
+  @@map("onboarding_states")
+}
+
+model Client {
+  id               String       @id @default(uuid())
+  firm_id          String
+  firm             Firm         @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  assigned_to      String?
+  assigned_ca      User?        @relation("AssignedCA", fields: [assigned_to], references: [id])
+  name             String
+  pan_encrypted    String?
+  gstin            String?
+  entity_type      EntityType   @default(INDIVIDUAL)
+  email            String?
+  phone            String?
+  whatsapp_number  String?
+  portal_enabled   Boolean      @default(false)
+  services_engaged String[]
+  financial_year   String       @default("2024-25")
+  address          String?
+  status           ClientStatus @default(ACTIVE)
+  deleted_at       DateTime?
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  documents         Document[]
+  notices           Notice[]
+  gst_recons        GstReconciliation[]
+  invoices          Invoice[]
+  portal_sessions   ClientPortalSession[]
+  portal_invites    PortalInvite[]
+  document_requests DocumentRequest[]
+  compliance_tasks  ComplianceTask[]
+
+  @@index([firm_id, deleted_at])
+  @@index([firm_id, status])
+  @@map("clients")
+}
+
+model Document {
+  id             String         @id @default(uuid())
+  client_id      String
+  client         Client         @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  uploaded_by    String?
+  name           String
+  r2_key         String
+  file_size      Int?
+  mime_type      String?
+  file_hash      String?
+  doc_type       DocumentType   @default(OTHER)
+  source         DocumentSource @default(CA_UPLOAD)
+  ai_extracted   Boolean        @default(false)
+  ai_data        Json?
+  ocr_text       String?
+  financial_year String?
+  is_demo        Boolean        @default(false)
+  deleted_at     DateTime?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  fulfilled_requests DocumentRequest[]
+
+  @@index([client_id, created_at])
+  @@index([file_hash])
+  @@map("documents")
+}
+
+model Notice {
+  id               String       @id @default(uuid())
+  client_id        String
+  client           Client       @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  notice_type      NoticeType
+  portal           NoticePortal @default(INCOME_TAX)
+  reference_number String?
+  section          String?
+  assessment_year  String?
+  issued_date      DateTime?
+  due_date         DateTime?
+  document_r2_key  String?
+  ocr_text         String?
+  ai_job_id        String?
+  ai_status        AiStatus     @default(PENDING)
+  ai_draft         String?
+  ai_citations     Json?
+  ai_summary       String?
+  review_status    ReviewStatus @default(DRAFT)
+  reviewed_by      String?
+  reviewer         User?        @relation("ReviewedBy", fields: [reviewed_by], references: [id])
+  reviewed_at      DateTime?
+  ca_edited_reply  String?
+  reply_pdf_r2_key String?
+  filed_at         DateTime?
+  is_demo          Boolean      @default(false)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  @@index([client_id, ai_status])
+  @@index([client_id, review_status])
+  @@map("notices")
+}
+
+model GstReconciliation {
+  id                      String      @id @default(uuid())
+  client_id               String
+  client                  Client      @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  period                  String
+  gstin                   String
+  gstr2b_r2_key           String?
+  purchase_r2_key         String?
+  job_id                  String?
+  status                  ReconStatus @default(PENDING)
+  normalisation_log       Json?
+  total_invoices_gstr2b   Int?
+  total_invoices_purchase Int?
+  matched_count           Int?
+  mismatch_count          Int?
+  missing_in_gstr2b       Int?
+  missing_in_purchase     Int?
+  mismatches              Json?
+  vendor_risk_data        Json?
+  report_excel_key        String?
+  report_pdf_key          String?
+  is_demo                 Boolean     @default(false)
+  created_at              DateTime    @default(now())
+  updated_at              DateTime    @updatedAt
+
+  @@index([client_id])
+  @@map("gst_reconciliations")
+}
+
+model Invoice {
+  id                  String        @id @default(uuid())
+  client_id           String
+  client              Client        @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  invoice_number      String        @unique
+  description         String
+  amount              Float
+  gst_amount          Float
+  total_amount        Float
+  notes               String?
+  status              InvoiceStatus @default(DRAFT)
+  due_date            DateTime
+  sent_at             DateTime?
+  paid_at             DateTime?
+  payment_link        String?
+  razorpay_payment_id String?
+  is_demo             Boolean       @default(false)
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  @@map("invoices")
+}
+
+model ComplianceTask {
+  id           String    @id @default(uuid())
+  client_id    String
+  client       Client    @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  due_date     DateTime
+  service_type String
+  status       String    @default("PENDING")
+  filed_at     DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@index([client_id, due_date])
+  @@map("compliance_tasks")
+}
+
+model ClientPortalSession {
+  id                      String    @id @default(uuid())
+  client_id               String
+  client                  Client    @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  phone_hash              String
+  pin_hash                String?
+  pin_attempt_count       Int       @default(0)
+  pin_locked_until        DateTime?
+  total_failed_attempts   Int       @default(0)
+  pin_history             String[]
+  pin_reset_token_hash    String?
+  pin_reset_expires_at    DateTime?
+  change_pin_token_hash   String?
+  change_pin_expires_at   DateTime?
+  device_trust_token_hash String?
+  device_fingerprint      String?
+  webauthn_credential_id  String?
+  webauthn_public_key     String?
+  webauthn_counter        Int       @default(0)
+  push_subscription       Json?
+  biometric_enabled       Boolean   @default(false)
+  notifications_enabled   Boolean   @default(false)
+  language                String    @default("en")
+  trusted_at              DateTime?
+  trust_expires_at        DateTime?
+  last_seen_at            DateTime  @default(now())
+  created_at              DateTime  @default(now())
+
+  @@index([phone_hash])
+  @@map("client_portal_sessions")
+}
+
+model PortalInvite {
+  id         String   @id @default(uuid())
+  client_id  String
+  client     Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  token_hash String
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@map("portal_invites")
+}
+
+model PortalOtp {
+  id            String   @id @default(uuid())
+  phone_hash    String
+  otp_hash      String
+  expires_at    DateTime
+  used          Boolean  @default(false)
+  attempt_count Int      @default(0)
+  created_at    DateTime @default(now())
+
+  @@map("portal_otps")
+}
+
+model DocumentRequest {
+  id                    String       @id @default(uuid())
+  client_id             String
+  client                Client       @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  firm_id               String
+  requested_by          String
+  requester             User         @relation(fields: [requested_by], references: [id])
+  document_type         DocumentType
+  description           String?
+  due_date              DateTime?
+  status                String       @default("PENDING")
+  fulfilled_document_id String?
+  fulfilled_document    Document?    @relation(fields: [fulfilled_document_id], references: [id])
+  push_sent_at          DateTime?
+  created_at            DateTime     @default(now())
+  updated_at            DateTime     @updatedAt
+
+  @@index([client_id, status])
+  @@map("document_requests")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  firm_id     String
+  firm        Firm     @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  user_id     String?
+  type        String
+  title       String
+  body        String
+  link        String?
+  read        Boolean  @default(false)
+  entity_type String?
+  entity_id   String?
+  created_at  DateTime @default(now())
+
+  @@index([firm_id, read, created_at])
+  @@map("notifications")
+}
+
+model UserSession {
+  id             String    @id @default(uuid())
+  user_id        String
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  jti            String    @unique
+  device_name    String?
+  browser        String?
+  ip_address     String?
+  city           String?
+  last_active_at DateTime  @default(now())
+  expires_at     DateTime
+  revoked_at     DateTime?
+  created_at     DateTime  @default(now())
+
+  @@index([user_id])
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  firm_id     String
+  firm        Firm     @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  user_id     String?
+  user        User?    @relation(fields: [user_id], references: [id])
+  entity_type String
+  entity_id   String
+  action      String
+  old_value   Json?
+  new_value   Json?
+  ip_address  String?
+  created_at  DateTime @default(now())
+
+  @@index([firm_id, created_at])
+  @@map("audit_logs")
+}
+
+model SupportTicket {
+  id                String    @id @default(uuid())
+  firm_id           String
+  firm              Firm      @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  user_id           String
+  user              User      @relation(fields: [user_id], references: [id])
+  type              String
+  subject           String
+  description       String
+  screenshot_r2_key String?
+  browser_info      Json?
+  status            String    @default("OPEN")
+  priority          String    @default("MEDIUM")
+  resolved_at       DateTime?
+  created_at        DateTime  @default(now())
+
+  @@map("support_tickets")
+}
+
+model Referral {
+  id                String    @id @default(uuid())
+  referrer_firm_id  String
+  referrer_firm     Firm      @relation("ReferrerFirm", fields: [referrer_firm_id], references: [id])
+  referred_firm_id  String?   @unique
+  referred_firm     Firm?     @relation("ReferredFirm", fields: [referred_firm_id], references: [id])
+  referral_code     String    @unique
+  status            String    @default("PENDING")
+  reward_months     Int       @default(1)
+  reward_applied_at DateTime?
+  signed_up_at      DateTime?
+  subscribed_at     DateTime?
+  created_at        DateTime  @default(now())
+
+  @@map("referrals")
+}
+
+model DataExportRequest {
+  id           String    @id @default(uuid())
+  firm_id      String
+  firm         Firm      @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  requested_by String
+  status       String    @default("PENDING")
+  r2_key       String?
+  download_url String?
+  expires_at   DateTime?
+  created_at   DateTime  @default(now())
+
+  @@map("data_export_requests")
+}
+
+model AccountDeletionRequest {
+  id                    String    @id @default(uuid())
+  firm_id               String    @unique
+  firm                  Firm      @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  requested_by          String
+  reason                String?
+  status                String    @default("PENDING")
+  scheduled_deletion_at DateTime
+  cancelled_at          DateTime?
+  completed_at          DateTime?
+  created_at            DateTime  @default(now())
+
+  @@map("account_deletion_requests")
+}
+
+model ChangelogEntry {
+  id           String   @id @default(uuid())
+  version      String
+  title        String
+  description  String
+  type         String
+  published_at DateTime @default(now())
+
+  @@map("changelog_entries")
+}
+
+model FirmChangelogRead {
+  id           String   @id @default(uuid())
+  firm_id      String
+  firm         Firm     @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  last_read_at DateTime @default(now())
+
+  @@unique([firm_id])
+  @@map("firm_changelog_reads")
+}
+
+model JobLog {
+  id           String    @id @default(uuid())
+  job_id       String    @unique
+  job_type     String
+  entity_id    String?
+  entity_type  String?
+  status       String
+  attempts     Int       @default(0)
+  error        String?
+  started_at   DateTime?
+  completed_at DateTime?
+  created_at   DateTime  @default(now())
+
+  @@map("job_logs")
+}

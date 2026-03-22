@@ -1,0 +1,58 @@
+# CA Saathi — Cline Rules
+
+# Read this file before every single task## What we are building
+
+CA Saathi is an AI-powered practice management SaaS platform for Indian Chartered Accountants. It has two parts:
+
+1. A web app (Next.js 14) for the CA to manage their practice
+2. A client portal (PWA) for the CA's clients to upload documents and check filing status
+
+## Tech stack — use exactly these, nothing else
+
+- Frontend: Next.js 14 with App Router, TypeScript (strict mode), Tailwind CSS, shadcn/ui
+- Backend: Next.js API routes (same project)
+- Database: PostgreSQL via Prisma ORM (hosted on Supabase)
+- Job queue: BullMQ with Redis (hosted on Upstash)
+- File storage: Cloudflare R2 (S3-compatible)
+- AI engine: Anthropic Claude API (claude-sonnet-4-6)
+- Email: Resend
+- SMS (OTP only): Fast2SMS
+- Payments: Razorpay
+- Push notifications: Web Push API with VAPID keys
+
+## Folder structure rules
+
+- All pages go in: src/app/(dashboard)/ or src/app/(auth)/ or src/app/(client-portal)/- All API routes go in: src/app/api/
+- All reusable components go in: src/components/
+- All backend utilities go in: src/lib/
+- All background workers go in: workers/
+- Database schema is in: prisma/schema.prisma
+
+## Coding rules — follow these always
+
+1. Every database query that fetches by ID MUST include firm_id in the WHERE clause — no exceptions
+2. Never hard delete anything — always use deleted_at for soft deletes
+3. Never call Claude API directly from an API route — always queue a BullMQ job first
+4. Never handle file bytes on the server — always use pre-signed R2 URLs for upload and download5. All AI outputs must have review_status = DRAFT until CA explicitly marks them reviewed6. Every webhook endpoint must validate the signature before processing anything
+5. PAN numbers must be encrypted using AES-256-GCM before storing in database
+6. Use ok(), err(), created() helpers from src/lib/utils/api.ts for all API responses
+7. Use Zod for validating every API input
+8. TypeScript strict mode — no 'any' types allowed
+
+## API response format — always use thisimport { ok, err } from ''lib/utils/api'' (see below for file content)
+
+return ok(data) // for success
+return err('message') // for errors
+
+## The three MVP features (most important)
+
+1. Notice AI — CA uploads notice PDF → AI reads it → drafts legal reply → CA reviews → downloads PDF
+2. GST Reconciliation — CA uploads GSTR-2B + purchase register → AI matches → shows mismatches
+3. Client Portal — clients register with phone OTP → set PIN → use biometric → upload documents
+
+## Security rules — never break these
+
+- Every API route reads firm_id from the JWT header x-firm-id set by middleware
+- Firm A can never see Firm B's data — enforced at both API and database level
+- JWTs stored in httpOnly cookies on web — never in localStorage
+- Webhook signatures validated using HMAC before any processing
