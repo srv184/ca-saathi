@@ -1,0 +1,195 @@
+import type { AiChatParams, NoticeReplyResult } from "./types";
+
+// ─────────────────────────────────────────────────────────
+// UNIVERSAL AI ENGINE
+//
+// Works with ANY AI provider that follows OpenAI API format.
+// Almost every provider in the world uses this format.
+//
+// To switch provider — change these 3 lines in .env.local:
+//   AI_BASE_URL  → provider endpoint
+//   AI_API_KEY   → your API key for that provider
+//   AI_MODEL     → model name
+//
+// Examples:
+//   Anthropic  → https://api.anthropic.com/v1
+//   OpenAI     → https://api.openai.com/v1
+//   Gemini     → https://generativelanguage.googleapis.com/v1beta/openai
+//   DeepSeek   → https://api.deepseek.com/v1
+//   Groq       → https://api.groq.com/openai/v1
+//   Together   → https://api.together.xyz/v1
+//   OpenRouter → https://openrouter.ai/api/v1
+//   Ollama     → http://localhost:11434/v1
+//   Any other  → just use their OpenAI-compatible endpoint
+//
+// Zero code changes needed to switch. Ever.
+// ─────────────────────────────────────────────────────────
+
+async function chat(params: AiChatParams): Promise<string> {
+  const baseUrl = process.env.AI_BASE_URL;
+  const apiKey = process.env.AI_API_KEY;
+  const model = process.env.AI_MODEL;
+
+  if (!baseUrl || !apiKey || !model) {
+    throw new Error(
+      "AI not configured. Set AI_BASE_URL, AI_API_KEY, and AI_MODEL in .env.local",
+    );
+  }
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: params.maxTokens,
+      messages: [
+        { role: "system", content: params.system },
+        ...params.messages.filter((m) => m.role !== "system"),
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(
+      `AI request failed. Provider: ${baseUrl}. Status: ${response.status}. Error: ${error}`,
+    );
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content ?? "";
+
+  if (!text) {
+    throw new Error("AI returned empty response");
+  }
+
+  return text;
+}
+
+function sanitise(text: string): string {
+  return text
+    .replace(/ignore (previous|above|all) instructions?/gi, "")
+    .replace(/system prompt/gi, "")
+    .slice(0, 12000);
+}
+
+async function parseJson<T>(text: string): Promise<T> {
+  const clean = text.replace(/```json|```/g, "").trim();
+  try {
+    return JSON.parse(clean) as T;
+  } catch {
+    throw new Error(
+      `AI returned invalid JSON. Preview: ${clean.slice(0, 200)}`,
+    );
+  }
+}
+
+// ─── THE ONLY FUNCTIONS FEATURE CODE EVER CALLS ──────────
+
+export async function generateNoticeReply(params: {
+  noticeText: string;
+  noticeType: string;
+  clientName: string;
+  assessmentYear?: string;
+  firmName: string;
+}): Promise<NoticeReplyResult> {
+  const text = await chat({
+    system: `You are a senior Indian Chartered Accountant with 20 years of experience in income tax and GST litigation. You draft precise, legally sound replies to notices from Indian tax authorities. Always cite exact sections of the Income Tax Act 1961 or GST Act 2017. Every reply must be professional, factual, and defensible. Output must be valid JSON only. Never include markdown.`,
+    messages: [
+      {
+        role: "user",
+        content: `Draft a reply to this Indian tax notice.
+
+Client name: ${params.clientName}
+CA firm: ${params.firmName}
+Notice type: ${params.noticeType}
+Assessment year: ${params.assessmentYear ?? "Not specified"}
+
+<notice_text>
+${sanitise(params.noticeText)}
+</notice_text>
+
+Return a JSON object with exactly these fields:
+{
+  "summary": "2-3 sentence plain English summary of what this notice is asking",
+  "draft": "Complete professional reply letter ready to be filed. Include proper salutation, DIN reference, legal arguments citing specific sections, and professional closing.",
+  "citations": [
+    {
+      "section": "Section number e.g. 143(2)",
+      "description": "What this section says in simple terms",
+      "source": "Income Tax Act 1961 or GST Act 2017"
+    }
+  ]
+}
+
+Return only the JSON. No markdown. No explanation.`,
+      },
+    ],
+    maxTokens: 2000,
+  });
+
+  return parseJson<NoticeReplyResult>(text);
+}
+
+export async function explainGstMismatches(params: {
+  mismatches: unknown[];
+  period: string;
+  gstin: string;
+}): Promise<unknown[]> {
+  const top50 = params.mismatches.slice(0, 50);
+  if (top50.length === 0) return [];
+
+  const text = await chat({
+    system: `You are a GST expert in India. Explain GST reconciliation mismatches in plain English. Always suggest a practical action. Output must be valid JSON only. Never include markdown.`,
+    messages: [
+      {
+        role: "user",
+        content: `Explain these GST reconciliation mismatches.
+
+GSTIN: ${params.gstin}
+Period: ${params.period}
+
+<mismatches>
+${JSON.stringify(top50, null, 2)}
+</mismatches>
+
+For each mismatch add:
+- "explanation": plain English reason (1-2 sentences)
+- "action": what CA should do (1 sentence)
+
+Return the same array with these fields added. Return only JSON.`,
+      },
+    ],
+    maxTokens: 2000,
+  });
+
+  return parseJson<unknown[]>(text);
+}
+
+export async function extractDocumentData(params: {
+  ocrText: string;
+  docType: string;
+  clientName: string;
+}): Promise<Record<string, unknown>> {
+  const text = await chat({
+    system: `You are an expert at extracting structured data from Indian financial documents. Output must be valid JSON only. Never include markdown.`,
+    messages: [
+      {
+        role: "user",
+        content: `Extract all structured data from this ${params.docType} document for client ${params.clientName}.
+
+<document_text>
+${sanitise(params.ocrText)}
+</document_text>
+
+Return a JSON object with all fields you can extract. Return only JSON.`,
+      },
+    ],
+    maxTokens: 1000,
+  });
+
+  return parseJson<Record<string, unknown>>(text);
+}
