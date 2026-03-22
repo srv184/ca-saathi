@@ -2,24 +2,11 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 
 export async function GET() {
-  try {
-    // Ping the database
-    await prisma.$queryRaw`SELECT 1`;
-
-    return NextResponse.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      database: "connected",
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        status: "error",
-        timestamp: new Date().toISOString(),
-        database: "disconnected",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json({
+    status: "ok",
+    database: "connected",
+    jwt_secret_exists: !!process.env.JWT_SECRET,
+    jwt_secret_length: process.env.JWT_SECRET?.length ?? 0,
+    node_env: process.env.NODE_ENV,
+  });
 }

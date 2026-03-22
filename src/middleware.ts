@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth/jwt";
 
 const PUBLIC_PATHS = [
   "/login",
   "/register",
+  "/forgot-password",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/logout",
   "/api/health",
   "/api/portal",
   "/portal",
@@ -17,18 +18,31 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const decoded = atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Allow public paths
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Get token from cookie
   const token = req.cookies.get("ca_saathi_token")?.value;
 
-  // No token — redirect to login for pages, return 401 for API
   if (!token) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
@@ -39,20 +53,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Verify token
-  try {
-    const payload = verifyToken(token);
+  const payload = decodeJwtPayload(token);
 
-    // Add firm and user info to headers for API routes
-    const headers = new Headers(req.headers);
-    headers.set("x-user-id", payload.id);
-    headers.set("x-firm-id", payload.firmId);
-    headers.set("x-user-role", payload.role);
-    headers.set("x-user-name", payload.name);
-
-    return NextResponse.next({ request: { headers } });
-  } catch {
-    // Invalid token — redirect to login
+  if (!payload) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
@@ -63,6 +66,29 @@ export function middleware(req: NextRequest) {
     response.cookies.delete("ca_saathi_token");
     return response;
   }
+
+  // Check expiry
+  const exp = payload.exp as number | undefined;
+  if (exp && exp < Math.floor(Date.now() / 1000)) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { success: false, error: "Token expired" },
+        { status: 401 },
+      );
+    }
+    const response = NextResponse.redirect(new URL("/login", req.url));
+    response.cookies.delete("ca_saathi_token");
+    return response;
+  }
+
+  // Add user info to headers
+  const headers = new Headers(req.headers);
+  headers.set("x-user-id", (payload.id as string) ?? "");
+  headers.set("x-firm-id", (payload.firmId as string) ?? "");
+  headers.set("x-user-role", (payload.role as string) ?? "");
+  headers.set("x-user-name", (payload.name as string) ?? "");
+
+  return NextResponse.next({ request: { headers } });
 }
 
 export const config = {
