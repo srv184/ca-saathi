@@ -1,0 +1,30 @@
+import { NextRequest } from "next/server";
+import prisma from "@/lib/db/prisma";
+import { ok, err } from "@/lib/utils/api";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const firmId = req.headers.get("x-firm-id");
+    if (!firmId) return err("Unauthorized", 401);
+
+    const recon = await prisma.gstReconciliation.findFirst({
+      where: {
+        id: params.id,
+        client: { firm_id: firmId },
+      },
+      include: {
+        client: { select: { name: true, gstin: true } },
+      },
+    });
+
+    if (!recon) return err("Reconciliation not found", 404);
+
+    return ok(recon);
+  } catch (error) {
+    console.error("[gst/[id]/GET]", error);
+    return err("Something went wrong", 500);
+  }
+}

@@ -119,15 +119,12 @@ export const ReviewNoticeSchema = z.object({
 
 export const StartReconSchema = z.object({
   clientId: z.string().uuid("Invalid client ID"),
-  gstin: z
-    .string()
-    .regex(
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      "Invalid GSTIN format",
-    ),
+  gstin: z.string().min(1, "GSTIN is required"),
   period: z.string().min(1, "Period is required"),
-  gstr2bKey: z.string().min(1, "GSTR-2B file is required"),
-  purchaseKey: z.string().min(1, "Purchase register file is required"),
+  gstr2bKey: z.string().optional(),
+  purchaseKey: z.string().optional(),
+  gstr2bData: z.string().optional(),
+  purchaseData: z.string().optional(),
 });
 
 // ─── INVOICE ─────────────────────────────────────────────
