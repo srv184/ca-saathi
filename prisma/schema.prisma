@@ -294,6 +294,7 @@ model Document {
   fulfilled_requests DocumentRequest[]
 
   @@index([client_id, created_at])
+  @@index([client_id, doc_type])
   @@index([file_hash])
   @@map("documents")
 }
@@ -329,6 +330,7 @@ model Notice {
 
   @@index([client_id, ai_status])
   @@index([client_id, review_status])
+  @@index([client_id, due_date])
   @@map("notices")
 }
 
@@ -381,6 +383,8 @@ model Invoice {
   created_at          DateTime      @default(now())
   updated_at          DateTime      @updatedAt
 
+  @@index([client_id, status])
+  @@index([client_id, due_date])
   @@map("invoices")
 }
 
@@ -398,6 +402,7 @@ model ComplianceTask {
   updated_at   DateTime  @updatedAt
 
   @@index([client_id, due_date])
+  @@index([client_id, status, due_date])
   @@map("compliance_tasks")
 }
 
@@ -493,6 +498,7 @@ model Notification {
   created_at  DateTime @default(now())
 
   @@index([firm_id, read, created_at])
+  @@index([firm_id, created_at])
   @@map("notifications")
 }
 
