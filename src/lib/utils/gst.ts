@@ -36,9 +36,16 @@ export function normaliseInvoiceNo(raw: string): string {
 }
 
 // Parse CSV lines into key-value objects
+const MAX_ROWS = 10000;
+
 export function parseCsvLines(csv: string): Record<string, string>[] {
   const lines = csv.split("\n").filter((l) => l.trim());
   if (lines.length < 2) return [];
+  if (lines.length > MAX_ROWS + 1) {
+    throw new Error(
+      `CSV has too many rows. Maximum allowed is ${MAX_ROWS} rows. Your file has ${lines.length - 1} rows.`,
+    );
+  }
 
   const headers = lines[0].split(",").map((h) =>
     h

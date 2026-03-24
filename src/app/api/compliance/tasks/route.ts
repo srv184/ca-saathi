@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
 
-    // Generate tasks for all active clients
     const clients = await prisma.client.findMany({
       where: {
         firm_id: firmId,
@@ -62,6 +61,14 @@ export async function POST(req: NextRequest) {
 
     let totalCreated = 0;
     const fromDate = new Date();
+    const allTasks: {
+      client_id: string;
+      title: string;
+      description: string;
+      service_type: string;
+      due_date: Date;
+      status: string;
+    }[] = [];
 
     for (const client of clients) {
       if (client.services_engaged.length === 0) continue;
@@ -73,29 +80,50 @@ export async function POST(req: NextRequest) {
       );
 
       for (const task of tasks) {
-        // Upsert — safe to run multiple times
-        const existing = await prisma.complianceTask.findFirst({
-          where: {
-            client_id: client.id,
-            title: task.title,
-            due_date: task.due_date,
-          },
+        allTasks.push({
+          client_id: client.id,
+          title: task.title,
+          description: task.description,
+          service_type: task.service_type,
+          due_date: task.due_date,
+          status: "PENDING",
         });
-
-        if (!existing) {
-          await prisma.complianceTask.create({
-            data: {
-              client_id: client.id,
-              title: task.title,
-              description: task.description,
-              service_type: task.service_type,
-              due_date: task.due_date,
-              status: "PENDING",
-            },
-          });
-          totalCreated++;
-        }
       }
+    }
+
+    // Get existing tasks to avoid duplicates
+    const existingTasks = await prisma.complianceTask.findMany({
+      where: {
+        client: { firm_id: firmId },
+        due_date: { gte: fromDate },
+      },
+      select: {
+        client_id: true,
+        title: true,
+        due_date: true,
+      },
+    });
+
+    // Build a set of existing task keys
+    const existingKeys = new Set(
+      existingTasks.map(
+        (t) => `${t.client_id}_${t.title}_${t.due_date.toISOString()}`,
+      ),
+    );
+
+    // Filter out duplicates
+    const newTasks = allTasks.filter((t) => {
+      const key = `${t.client_id}_${t.title}_${t.due_date.toISOString()}`;
+      return !existingKeys.has(key);
+    });
+
+    // Bulk insert all new tasks at once
+    if (newTasks.length > 0) {
+      await prisma.complianceTask.createMany({
+        data: newTasks,
+        skipDuplicates: true,
+      });
+      totalCreated = newTasks.length;
     }
 
     return ok({
