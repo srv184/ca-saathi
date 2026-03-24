@@ -6,6 +6,14 @@
 .pnp.js
 .yarn/install-state.gz
 
+
+# Environment files
+.env
+.env.local
+.env*.local
+.env.development
+.env.production
+
 # testing
 /coverage
 
@@ -36,3 +44,4 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+.env 
