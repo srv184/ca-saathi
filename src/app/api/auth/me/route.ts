@@ -1,15 +1,14 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { ok, err } from "@/lib/utils/api";
+import { verifyRequest } from "@/lib/auth/verify-request";
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const firmId = req.headers.get("x-firm-id");
+    const verified = verifyRequest(req);
+    if (!verified) return err("Unauthorized", 401);
 
-    if (!userId || !firmId) {
-      return err("Unauthorized", 401);
-    }
+    const { firmId, userId } = verified;
 
     const user = await prisma.user.findFirst({
       where: { id: userId, firm_id: firmId },

@@ -106,6 +106,7 @@ export default function PortalJoinPage({
         localStorage.setItem("portal_device_token", data.data.deviceToken);
         localStorage.setItem("portal_client_id", data.data.clientId);
         localStorage.setItem("portal_client_name", data.data.clientName);
+        localStorage.setItem("portal_token", data.data.portalToken);
       }
 
       setClientName(data.data.clientName);

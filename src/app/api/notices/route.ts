@@ -3,6 +3,7 @@ import prisma from "@/lib/db/prisma";
 import { ok, created, err, validationError } from "@/lib/utils/api";
 import { CreateNoticeSchema } from "@/lib/utils/validators";
 import { generateNoticeReply } from "@/lib/ai/index";
+import { aiRatelimit } from "@/lib/utils/ratelimit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,10 +52,16 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// Add at start of POST after getting firmId:
 export async function POST(req: NextRequest) {
   try {
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
+
+    // Rate limit AI calls per firm
+    const { success: aiAllowed } = await aiRatelimit.limit(firmId);
+    if (!aiAllowed)
+      return err("AI rate limit exceeded. Try again in 1 hour.", 429);
 
     const body = await req.json();
     const parsed = CreateNoticeSchema.safeParse(body);

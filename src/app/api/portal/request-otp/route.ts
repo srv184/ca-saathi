@@ -5,6 +5,7 @@ import { RequestOtpSchema } from "@/lib/utils/validators";
 import { hashField, generateSecureToken } from "@/lib/utils/crypto";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { otpRatelimit, getIp } from "@/lib/utils/ratelimit";
 
 async function sendOtpSms(phone: string, otp: string): Promise<void> {
   const apiKey = process.env.FAST2SMS_API_KEY;
@@ -28,6 +29,10 @@ async function sendOtpSms(phone: string, otp: string): Promise<void> {
   });
 }
 
+// Add at start of POST:
+const ip = getIp(req);
+const { success } = await otpRatelimit.limit(ip);
+if (!success) return err("Too many OTP requests. Try again in 1 hour.", 429);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

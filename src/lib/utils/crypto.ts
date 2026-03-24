@@ -1,12 +1,31 @@
 import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
-const KEY = Buffer.from(
-  process.env.FIELD_ENCRYPTION_KEY || "a".repeat(64),
-  "hex",
-);
+
+function getEncryptionKey(): Buffer {
+  const key = process.env.FIELD_ENCRYPTION_KEY;
+  if (!key) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "FIELD_ENCRYPTION_KEY is not set. This is required in production.",
+      );
+    }
+    // Development fallback — never used in production
+    console.warn(
+      "[crypto] WARNING: Using default encryption key. Set FIELD_ENCRYPTION_KEY in .env.local",
+    );
+    return Buffer.from("a".repeat(64), "hex");
+  }
+  if (key.length !== 64) {
+    throw new Error(
+      "FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)",
+    );
+  }
+  return Buffer.from(key, "hex");
+}
 
 export function encryptField(plaintext: string): string {
+  const KEY = getEncryptionKey();
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
   const encrypted = Buffer.concat([
@@ -22,7 +41,11 @@ export function encryptField(plaintext: string): string {
 }
 
 export function decryptField(ciphertext: string): string {
+  const KEY = getEncryptionKey();
   const [ivHex, encryptedHex, tagHex] = ciphertext.split(".");
+  if (!ivHex || !encryptedHex || !tagHex) {
+    throw new Error("Invalid ciphertext format");
+  }
   const iv = Buffer.from(ivHex, "hex");
   const encrypted = Buffer.from(encryptedHex, "hex");
   const tag = Buffer.from(tagHex, "hex");

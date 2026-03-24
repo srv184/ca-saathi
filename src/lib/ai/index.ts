@@ -47,10 +47,25 @@ async function chat(params: AiChatParams): Promise<string> {
 }
 
 function sanitise(text: string): string {
-  return text
-    .replace(/ignore (previous|above|all) instructions?/gi, "")
-    .replace(/system prompt/gi, "")
-    .slice(0, 12000);
+  return (
+    text
+      // Remove prompt injection attempts
+      .replace(/ignore (previous|above|all) instructions?/gi, "[REDACTED]")
+      .replace(/system prompt/gi, "[REDACTED]")
+      .replace(/you are now/gi, "[REDACTED]")
+      .replace(/disregard (all|any|previous)/gi, "[REDACTED]")
+      .replace(/forget (all|any|previous|your)/gi, "[REDACTED]")
+      .replace(/new instruction/gi, "[REDACTED]")
+      .replace(/act as (a|an)/gi, "[REDACTED]")
+      .replace(/pretend (to be|you are)/gi, "[REDACTED]")
+      .replace(/jailbreak/gi, "[REDACTED]")
+      .replace(/DAN mode/gi, "[REDACTED]")
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "[REDACTED]")
+      .replace(/\{\{.*?\}\}/g, "[REDACTED]")
+      // Limit length
+      .slice(0, 12000)
+      .trim()
+  );
 }
 
 async function parseJson<T>(text: string): Promise<T> {

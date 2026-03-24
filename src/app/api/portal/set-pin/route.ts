@@ -4,6 +4,7 @@ import { ok, err, validationError } from "@/lib/utils/api";
 import { SetPinSchema } from "@/lib/utils/validators";
 import { hashField, generateSecureToken } from "@/lib/utils/crypto";
 import bcrypt from "bcryptjs";
+import { signPortalToken } from "@/lib/auth/portal-token";
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,7 +79,11 @@ export async function POST(req: NextRequest) {
       });
 
       // Generate portal JWT
-      const portalToken = generateSecureToken(32);
+      // Generate signed portal token
+      const portalToken = signPortalToken(
+        invite.client_id,
+        invite.client.firm_id,
+      );
 
       return ok({
         message: "PIN set successfully",

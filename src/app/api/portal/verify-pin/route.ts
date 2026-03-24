@@ -3,6 +3,7 @@ import prisma from "@/lib/db/prisma";
 import { ok, err } from "@/lib/utils/api";
 import { hashField, generateSecureToken } from "@/lib/utils/crypto";
 import bcrypt from "bcryptjs";
+import { signPortalToken } from "@/lib/auth/portal-token";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,7 +70,10 @@ export async function POST(req: NextRequest) {
     }
 
     // PIN correct — reset attempt count
-    const portalToken = generateSecureToken(32);
+    const portalToken = signPortalToken(
+      session.client_id,
+      session.client.firm_id,
+    );
     const deviceTrustToken = generateSecureToken(32);
     const trustTokenHash = hashField(deviceTrustToken);
 

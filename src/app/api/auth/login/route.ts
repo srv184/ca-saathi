@@ -4,23 +4,27 @@ import { verifyPassword } from "@/lib/auth/password";
 import { signToken } from "@/lib/auth/jwt";
 import { ok, err, validationError } from "@/lib/utils/api";
 import { LoginSchema } from "@/lib/utils/validators";
+import { authRatelimit, getIp } from "@/lib/utils/ratelimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getIp(req);
+    const { success } = await authRatelimit.limit(ip);
+    if (!success)
+      return err("Too many login attempts. Try again in 15 minutes.", 429);
+
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error);
 
     const { email, password } = parsed.data;
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
       include: { firm: true },
     });
 
-    // Same error for wrong email and wrong password
-    // This prevents attackers from knowing which one is wrong
     const INVALID_MSG = "Invalid email or password";
     if (!user) return err(INVALID_MSG, 401);
     if (!user.is_active) return err("Your account has been deactivated", 401);
@@ -28,7 +32,6 @@ export async function POST(req: NextRequest) {
     const passwordMatch = await verifyPassword(password, user.password_hash);
     if (!passwordMatch) return err(INVALID_MSG, 401);
 
-    // Update last login
     await prisma.user.update({
       where: { id: user.id },
       data: { last_login_at: new Date() },

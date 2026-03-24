@@ -1,11 +1,25 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { ok, err } from "@/lib/utils/api";
+import { verifyPortalToken } from "@/lib/auth/portal-token";
 
 export async function GET(req: NextRequest) {
   try {
-    const clientId = req.headers.get("x-portal-client-id");
-    if (!clientId) return err("Unauthorized", 401);
+    // Verify portal token from Authorization header or cookie
+    const authHeader = req.headers.get("authorization");
+    const cookieToken = req.cookies.get("portal_token")?.value;
+    const token = authHeader?.replace("Bearer ", "") ?? cookieToken;
+
+    if (!token) return err("Unauthorized", 401);
+
+    let payload;
+    try {
+      payload = verifyPortalToken(token);
+    } catch {
+      return err("Invalid or expired session. Please log in again.", 401);
+    }
+
+    const { clientId } = payload;
 
     const client = await prisma.client.findFirst({
       where: { id: clientId, deleted_at: null },

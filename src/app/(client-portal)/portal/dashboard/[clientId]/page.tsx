@@ -64,8 +64,11 @@ export default function PortalDashboardPage({
 
   async function loadData() {
     try {
+      const portalToken = localStorage.getItem("portal_token");
       const res = await fetch("/api/portal/me", {
-        headers: { "x-portal-client-id": params.clientId },
+        headers: {
+          Authorization: `Bearer ${portalToken ?? ""}`,
+        },
       });
       const data = await res.json();
       if (data.data) setData(data.data);
