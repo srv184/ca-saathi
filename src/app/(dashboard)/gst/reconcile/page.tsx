@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 interface Client {
   id: string;
@@ -9,7 +10,7 @@ interface Client {
   gstin?: string;
 }
 
-export default function StartReconPage() {
+function StartReconPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -201,5 +202,12 @@ export default function StartReconPage() {
         </div>
       </form>
     </div>
+  );
+}
+export default function StartReconPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <StartReconPageInner />
+    </Suspense>
   );
 }

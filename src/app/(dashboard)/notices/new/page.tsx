@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 const NOTICE_TYPES = [
   { value: "SCRUTINY_143_2", label: "Scrutiny 143(2)" },
@@ -22,7 +23,7 @@ interface Client {
   name: string;
 }
 
-export default function NewNoticePage() {
+function NewNoticePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -221,5 +222,13 @@ export default function NewNoticePage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewNoticePage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <NewNoticePageInner />
+    </Suspense>
   );
 }
