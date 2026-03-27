@@ -1,0 +1,29 @@
+[33mcommit 3bfc3cdc546ac479af6546d7bdb692e547b834bf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Sourav Kumar Bhagat <souravrishu184@gmail.com>
+Date:   Fri Mar 27 01:41:55 2026 +0530
+
+    fix: add prisma generate to build and postinstall
+
+[33mcommit b388ada2a03facaad01db6e8ca0ff92c0efdbd31[m
+Author: Sourav Kumar Bhagat <souravrishu184@gmail.com>
+Date:   Fri Mar 27 01:20:32 2026 +0530
+
+    fix: remove broken rollup dependency
+
+[33mcommit f78be01708573c7649f8dc9585d48e842e322c7f[m
+Author: Sourav Kumar Bhagat <souravrishu184@gmail.com>
+Date:   Fri Mar 27 00:51:24 2026 +0530
+
+    fix: delete duplicate page, rewrite request-otp route
+
+[33mcommit aab4688f30bc3aa60a67b1e0bc0fadcae461151d[m
+Author: Sourav Kumar Bhagat <souravrishu184@gmail.com>
+Date:   Fri Mar 27 00:41:49 2026 +0530
+
+    fix: delete duplicate page, rewrite request-otp route
+
+[33mcommit 5e0bb3235960b3261c715cc2548a97d6f19cdcb4[m
+Author: Sourav Kumar Bhagat <souravrishu184@gmail.com>
+Date:   Thu Mar 26 21:09:06 2026 +0530
+
+    fix: all build errors - unused imports, routing conflict, HTML entities, syntax errors
