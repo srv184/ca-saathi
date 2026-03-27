@@ -35,9 +35,9 @@ const FEATURES = [
   },
 ];
 
-const cookieStore = cookies();
-const token = cookieStore.get("ca_saathi_token");
-if (token) redirect("/dashboard");
+// const cookieStore = cookies();
+// const token = cookieStore.get("ca_saathi_token");
+// if (token) redirect("/dashboard");
 const PRICING = [
   {
     name: "Starter",
