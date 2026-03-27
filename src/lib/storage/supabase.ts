@@ -18,10 +18,7 @@ export function buildStorageKey(
   return `firms/${firmId}/clients/${clientId}/${unique}.${ext}`;
 }
 
-export async function getUploadUrl(
-  key: string,
-  contentType: string,
-): Promise<string> {
+export async function getUploadUrl(key: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .createSignedUploadUrl(key);

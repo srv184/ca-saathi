@@ -27,8 +27,7 @@ export async function POST(req: NextRequest) {
     const parsed = RequestUploadUrlSchema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error);
 
-    const { clientId, filename, contentType, docType } = parsed.data;
-
+    const { clientId, filename, contentType } = parsed.data;
     // Validate file type
     if (!ALLOWED_TYPES.includes(contentType)) {
       return err(
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (!client) return err("Client not found", 404);
 
     const storageKey = buildStorageKey(firmId, clientId, cleanFilename);
-    const uploadUrl = await getUploadUrl(storageKey, contentType);
+    const uploadUrl = await getUploadUrl(storageKey);
 
     return ok({
       uploadUrl,

@@ -230,7 +230,7 @@ export default function LandingPage() {
               className="p-6 border border-gray-100 rounded-2xl"
             >
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                "{t.text}"
+                &ldquo;{t.text}&rdquo;
               </p>
               <div>
                 <p className="font-medium text-gray-900 text-sm">{t.name}</p>
