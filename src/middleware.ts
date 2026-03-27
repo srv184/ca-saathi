@@ -14,7 +14,6 @@ const PUBLIC_PATHS = [
   "/api/portal/verify-pin",
   "/api/portal/me",
   "/portal",
-  "/api/portal",
   "/_next",
   "/favicon.ico",
 ];
