@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 const FEATURES = [
   {
@@ -35,9 +33,6 @@ const FEATURES = [
   },
 ];
 
-// const cookieStore = cookies();
-// const token = cookieStore.get("ca_saathi_token");
-// if (token) redirect("/dashboard");
 const PRICING = [
   {
     name: "Starter",
