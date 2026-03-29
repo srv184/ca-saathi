@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set("ca_saathi_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
