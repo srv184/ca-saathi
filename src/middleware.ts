@@ -20,7 +20,9 @@ const PUBLIC_PATHS = [
 ];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((path) => pathname.startsWith(path));
+  return PUBLIC_PATHS.some((path) =>
+    path === "/" ? pathname === path : pathname.startsWith(path),
+  );
 }
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
