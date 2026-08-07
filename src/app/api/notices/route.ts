@@ -4,6 +4,8 @@ import { ok, created, err, validationError } from "@/lib/utils/api";
 import { CreateNoticeSchema } from "@/lib/utils/validators";
 import { generateNoticeReply } from "@/lib/ai/index";
 import { aiRatelimit } from "@/lib/utils/ratelimit";
+import { downloadBuffer } from "@/lib/storage/supabase";
+import { extractNoticeText } from "@/lib/notices/extract-text";
 
 export async function GET(req: NextRequest) {
   try {
@@ -76,6 +78,9 @@ export async function POST(req: NextRequest) {
       referenceNumber,
       dueDate,
       r2Key,
+      filename,
+      fileSize,
+      contentType,
     } = parsed.data;
 
     // Verify client belongs to firm
@@ -84,6 +89,9 @@ export async function POST(req: NextRequest) {
       include: { firm: { select: { name: true } } },
     });
     if (!client) return err("Client not found", 404);
+    if (!r2Key.startsWith(`notices/${client.id}/`)) {
+      return err("Invalid notice upload", 400);
+    }
 
     // Create notice with PENDING status
     const notice = await prisma.notice.create({
@@ -96,6 +104,9 @@ export async function POST(req: NextRequest) {
         assessment_year: assessmentYear,
         due_date: dueDate ? new Date(dueDate) : undefined,
         document_r2_key: r2Key,
+        document_name: filename,
+        document_size: fileSize,
+        document_mime_type: contentType,
         ai_status: "PENDING",
         review_status: "DRAFT",
       },
@@ -111,7 +122,8 @@ export async function POST(req: NextRequest) {
     // This returns immediately to the CA
     processNoticeAi({
       noticeId: notice.id,
-      noticeText: `Notice type: ${noticeType}. Section: ${section ?? "Not specified"}. Reference: ${referenceNumber ?? "Not specified"}.`,
+      storageKey: r2Key,
+      mimeType: contentType,
       noticeType,
       clientName: client.name,
       firmName: client.firm.name,
@@ -129,7 +141,8 @@ export async function POST(req: NextRequest) {
 
 async function processNoticeAi(params: {
   noticeId: string;
-  noticeText: string;
+  storageKey: string;
+  mimeType: string;
   noticeType: string;
   clientName: string;
   firmName: string;
@@ -139,11 +152,16 @@ async function processNoticeAi(params: {
     // Mark as processing
     await prisma.notice.update({
       where: { id: params.noticeId },
-      data: { ai_status: "PROCESSING" },
+      data: { ai_status: "PROCESSING", ai_error: null },
     });
 
+    // Always extract the uploaded notice before drafting. Typed form values are
+    // context only; the reply must be based on the document's actual text.
+    const documentBuffer = await downloadBuffer(params.storageKey);
+    const noticeText = await extractNoticeText(documentBuffer, params.mimeType);
+
     const result = await generateNoticeReply({
-      noticeText: params.noticeText,
+      noticeText,
       noticeType: params.noticeType,
       clientName: params.clientName,
       firmName: params.firmName,
@@ -155,6 +173,7 @@ async function processNoticeAi(params: {
       where: { id: params.noticeId },
       data: {
         ai_status: "COMPLETED",
+        ai_error: null,
         ai_draft: result.draft,
         ai_summary: result.summary,
         ai_citations: result.citations,
@@ -162,9 +181,11 @@ async function processNoticeAi(params: {
       },
     });
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message.slice(0, 1000) : "Notice processing failed";
     await prisma.notice.update({
       where: { id: params.noticeId },
-      data: { ai_status: "FAILED" },
+      data: { ai_status: "FAILED", ai_error: message },
     });
     throw error;
   }

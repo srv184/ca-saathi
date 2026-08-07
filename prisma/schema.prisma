@@ -311,9 +311,13 @@ model Notice {
   issued_date      DateTime?
   due_date         DateTime?
   document_r2_key  String?
+  document_name    String?
+  document_size    Int?
+  document_mime_type String?
   ocr_text         String?
   ai_job_id        String?
   ai_status        AiStatus     @default(PENDING)
+  ai_error         String?
   ai_draft         String?
   ai_citations     Json?
   ai_summary       String?

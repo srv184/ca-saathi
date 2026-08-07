@@ -109,6 +109,9 @@ export const CreateNoticeSchema = z.object({
   issuedDate: z.string().optional(),
   dueDate: z.string().optional(),
   r2Key: z.string().min(1, "Notice file is required"),
+  filename: z.string().min(1, "Notice filename is required").max(200),
+  fileSize: z.number().int().positive().max(10 * 1024 * 1024),
+  contentType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
 });
 
 export const ReviewNoticeSchema = z.object({

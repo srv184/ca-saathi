@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Notice {
@@ -11,7 +10,11 @@ interface Notice {
   assessment_year?: string;
   reference_number?: string;
   due_date?: string;
+  document_name?: string;
+  document_size?: number;
+  documentUrl?: string | null;
   ai_status: string;
+  ai_error?: string;
   ai_draft?: string;
   ai_summary?: string;
   ai_citations?: {
@@ -31,7 +34,6 @@ export default function NoticeDetailPage({
 }: {
   params: { id: string };
 }) {
-  const router = useRouter();
   const [notice, setNotice] = useState<Notice | null>(null);
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(true);
@@ -173,6 +175,28 @@ export default function NoticeDetailPage({
         </div>
       )}
 
+      {notice.documentUrl && (
+        <div className="card flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Uploaded notice</p>
+            <p className="text-sm font-medium text-gray-900 truncate mt-1">
+              {notice.document_name ?? "Notice document"}
+              {notice.document_size ? ` · ${(notice.document_size / 1024 / 1024).toFixed(1)} MB` : ""}
+            </p>
+          </div>
+          <a href={notice.documentUrl} target="_blank" rel="noreferrer" className="btn-secondary text-sm shrink-0">
+            View document
+          </a>
+        </div>
+      )}
+
+      {notice.ai_status === "FAILED" && notice.ai_error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
+          <p className="font-medium">AI reply could not be generated</p>
+          <p className="mt-1">{notice.ai_error}</p>
+        </div>
+      )}
+
       {/* AI Summary */}
       {notice.ai_summary && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -231,7 +255,7 @@ export default function NoticeDetailPage({
             <div className="flex items-start gap-4 pt-2">
               <p className="text-sm text-gray-600 flex-1">
                 Review the draft above. Edit any line freely. When satisfied
-                click "Mark as reviewed" to unlock PDF download.
+                click &quot;Mark as reviewed&quot; to unlock PDF download.
               </p>
               <button
                 className="btn-primary shrink-0"

@@ -56,3 +56,10 @@ export async function uploadBuffer(
 
   if (error) throw new Error(`Upload failed: ${error.message}`);
 }
+
+export async function downloadBuffer(key: string): Promise<Buffer> {
+  const { data, error } = await supabase.storage.from(BUCKET).download(key);
+  if (error) throw new Error(`Download failed: ${error.message}`);
+
+  return Buffer.from(await data.arrayBuffer());
+}
