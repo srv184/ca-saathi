@@ -8,13 +8,28 @@ import { authRatelimit, getIp } from "@/lib/utils/ratelimit";
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
+    // Rate limiting must not make authentication unavailable if its external
+    // backing service is temporarily unreachable.
     const ip = getIp(req);
-    const { success } = await authRatelimit.limit(ip);
-    if (!success)
-      return err("Too many login attempts. Try again in 15 minutes.", 429);
+    try {
+      const { success } = await authRatelimit.limit(ip);
+      if (!success) {
+        return err("Too many login attempts. Try again in 15 minutes.", 429);
+      }
+    } catch (error) {
+      console.error(
+        "[auth/login] rate limit service unavailable; allowing request",
+        error,
+      );
+    }
 
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.warn("[auth/login] invalid JSON request body", error);
+      return err("Request body must be valid JSON", 400);
+    }
     const parsed = LoginSchema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error);
 
