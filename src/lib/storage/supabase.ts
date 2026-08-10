@@ -36,6 +36,13 @@ export async function getDownloadUrl(key: string): Promise<string> {
   return data.signedUrl;
 }
 
+export async function downloadBuffer(key: string): Promise<Buffer> {
+  const { data, error } = await supabase.storage.from(BUCKET).download(key);
+
+  if (error) throw new Error(`Download failed: ${error.message}`);
+  return Buffer.from(await data.arrayBuffer());
+}
+
 export async function deleteFile(key: string): Promise<void> {
   const { error } = await supabase.storage.from(BUCKET).remove([key]);
   if (error) throw new Error(`Delete failed: ${error.message}`);

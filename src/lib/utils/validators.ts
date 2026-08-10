@@ -109,6 +109,11 @@ export const CreateNoticeSchema = z.object({
   issuedDate: z.string().optional(),
   dueDate: z.string().optional(),
   r2Key: z.string().min(1, "Notice file is required"),
+  filename: z.string().min(1, "Notice filename is required"),
+  contentType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
+  fileHash: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/i, "Notice file hash must be a SHA-256 hash"),
 });
 
 export const ReviewNoticeSchema = z.object({

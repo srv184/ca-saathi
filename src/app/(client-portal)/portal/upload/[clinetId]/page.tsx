@@ -29,6 +29,16 @@ export default function PortalUploadPage({
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
+  async function sha256(fileToHash: File): Promise<string> {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      await fileToHash.arrayBuffer(),
+    );
+    return Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+  }
+
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
@@ -58,11 +68,15 @@ export default function PortalUploadPage({
       }
 
       // Step 2: Upload directly to storage
-      await fetch(urlData.data.uploadUrl, {
+      const storageRes = await fetch(urlData.data.uploadUrl, {
         method: "PUT",
         body: file,
         headers: { "Content-Type": file.type },
       });
+      if (!storageRes.ok) {
+        setError("Failed to upload file");
+        return;
+      }
 
       // Step 3: Confirm upload
       const confirmRes = await fetch("/api/documents", {
@@ -75,7 +89,7 @@ export default function PortalUploadPage({
           fileSize: file.size,
           contentType: file.type,
           docType,
-          fileHash: "",
+          fileHash: await sha256(file),
         }),
       });
 

@@ -4,6 +4,8 @@ import { ok, created, err, validationError } from "@/lib/utils/api";
 import { CreateNoticeSchema } from "@/lib/utils/validators";
 import { generateNoticeReply } from "@/lib/ai/index";
 import { aiRatelimit } from "@/lib/utils/ratelimit";
+import { downloadBuffer, hashBuffer } from "@/lib/storage/supabase";
+import { extractNoticeText } from "@/lib/notices/extract-text";
 
 export async function GET(req: NextRequest) {
   try {
@@ -76,6 +78,8 @@ export async function POST(req: NextRequest) {
       referenceNumber,
       dueDate,
       r2Key,
+      contentType,
+      fileHash,
     } = parsed.data;
 
     // Verify client belongs to firm
@@ -84,6 +88,21 @@ export async function POST(req: NextRequest) {
       include: { firm: { select: { name: true } } },
     });
     if (!client) return err("Client not found", 404);
+
+    const expectedPrefix = `firms/${firmId}/clients/${clientId}/`;
+    if (!r2Key.startsWith(expectedPrefix)) {
+      return err("Invalid notice storage key", 400);
+    }
+
+    const fileBuffer = await downloadBuffer(r2Key);
+    if ((await hashBuffer(fileBuffer)) !== fileHash.toLowerCase()) {
+      return err("Uploaded notice file could not be verified", 400);
+    }
+
+    const ocrText = await extractNoticeText({ buffer: fileBuffer, contentType });
+    if (!ocrText) {
+      return err("Could not extract text from the uploaded notice", 422);
+    }
 
     // Create notice with PENDING status
     const notice = await prisma.notice.create({
@@ -96,6 +115,7 @@ export async function POST(req: NextRequest) {
         assessment_year: assessmentYear,
         due_date: dueDate ? new Date(dueDate) : undefined,
         document_r2_key: r2Key,
+        ocr_text: ocrText,
         ai_status: "PENDING",
         review_status: "DRAFT",
       },
@@ -111,7 +131,7 @@ export async function POST(req: NextRequest) {
     // This returns immediately to the CA
     processNoticeAi({
       noticeId: notice.id,
-      noticeText: `Notice type: ${noticeType}. Section: ${section ?? "Not specified"}. Reference: ${referenceNumber ?? "Not specified"}.`,
+      noticeText: ocrText,
       noticeType,
       clientName: client.name,
       firmName: client.firm.name,

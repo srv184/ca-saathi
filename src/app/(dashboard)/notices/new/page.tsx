@@ -28,6 +28,7 @@ function NewNoticePageInner() {
   const searchParams = useSearchParams();
 
   const [clients, setClients] = useState<Client[]>([]);
+  const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     clientId: searchParams.get("clientId") ?? "",
     portal: "INCOME_TAX",
@@ -51,22 +52,61 @@ function NewNoticePageInner() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((p) => ({ ...p, [key]: e.target.value }));
 
+  async function sha256(fileToHash: File): Promise<string> {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      await fileToHash.arrayBuffer(),
+    );
+    return Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.clientId) {
-      setError("Please select a client");
+    if (!form.clientId || !file) {
+      setError(!form.clientId ? "Please select a client" : "Please upload a notice file");
       return;
     }
     setSaving(true);
     setError("");
 
     try {
+      const uploadUrlRes = await fetch("/api/documents/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: form.clientId,
+          filename: file.name,
+          contentType: file.type,
+          docType: "NOTICE",
+        }),
+      });
+      const uploadUrlData = await uploadUrlRes.json();
+      if (!uploadUrlRes.ok) {
+        setError(uploadUrlData.error ?? "Failed to prepare notice upload");
+        return;
+      }
+
+      const uploadRes = await fetch(uploadUrlData.data.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        setError("Failed to upload the notice file");
+        return;
+      }
+
       const res = await fetch("/api/notices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          r2Key: `notices/placeholder-${Date.now()}.txt`,
+          r2Key: uploadUrlData.data.storageKey,
+          filename: file.name,
+          contentType: file.type,
+          fileHash: await sha256(file),
         }),
       });
       const data = await res.json();
@@ -120,6 +160,47 @@ function NewNoticePageInner() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="label">Notice file *</label>
+          <div
+            className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+              file
+                ? "border-blue-400 bg-blue-50"
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+          >
+            <input
+              type="file"
+              id="notice-file-input"
+              className="hidden"
+              accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null);
+                setError("");
+              }}
+            />
+            <label htmlFor="notice-file-input" className="cursor-pointer">
+              {file ? (
+                <div>
+                  <p className="text-blue-700 font-medium">{file.name}</p>
+                  <p className="text-xs text-blue-500 mt-1">
+                    {(file.size / 1024).toFixed(0)} KB · Click to change
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-gray-600 font-medium">
+                    Click to select a notice
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    PDF, JPG, or PNG — required before AI generation
+                  </p>
+                </div>
+              )}
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -212,7 +293,7 @@ function NewNoticePageInner() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={saving || !form.clientId}
+          disabled={saving || !form.clientId || !file}
           >
             {saving ? "Generating reply…" : "Generate AI reply"}
           </button>

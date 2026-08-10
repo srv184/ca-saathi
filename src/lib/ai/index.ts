@@ -91,16 +91,16 @@ export async function generateNoticeReply(params: {
     messages: [
       {
         role: "user",
-        content: `Draft a reply to this Indian tax notice.
+        content: `Draft a reply to this Indian tax notice. The extracted notice text is the primary source of truth. Use the metadata only to supplement it; do not invent facts that are absent from the notice text.
 
 Client name: ${params.clientName}
 CA firm: ${params.firmName}
 Notice type: ${params.noticeType}
 Assessment year: ${params.assessmentYear ?? "Not specified"}
 
-<notice_text>
+        <notice_text_primary_source>
 ${sanitise(params.noticeText)}
-</notice_text>
+        </notice_text_primary_source>
 
 Return a JSON object with exactly these fields:
 {
