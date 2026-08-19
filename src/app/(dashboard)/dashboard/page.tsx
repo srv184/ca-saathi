@@ -39,7 +39,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         {[
           {
             label: "Total Clients",
@@ -89,7 +89,7 @@ export default function DashboardPage() {
         <h3 className="text-base font-medium text-gray-900 mb-4">
           Quick actions
         </h3>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
           {[
             { href: "/clients/new", icon: "👥", label: "Add client" },
             { href: "/notices/new", icon: "🤖", label: "Upload notice" },

@@ -77,7 +77,7 @@ export default function DocumentsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Documents</h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -121,7 +121,7 @@ export default function DocumentsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {[
@@ -180,7 +180,7 @@ export default function DocumentsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

@@ -50,7 +50,7 @@ export default function GstPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
             GST Reconciliation
@@ -59,7 +59,7 @@ export default function GstPage() {
             {total} total reconciliations
           </p>
         </div>
-        <Link href="/gst/reconcile" className="btn-primary">
+        <Link href="/gst/reconcile" className="btn-primary w-full sm:w-auto">
           + Run reconciliation
         </Link>
       </div>
@@ -89,7 +89,7 @@ export default function GstPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {[
@@ -153,7 +153,7 @@ export default function GstPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

@@ -218,7 +218,7 @@ export default function InvoiceDetailPage({
 
         {/* Line items */}
         <div className="py-4 border-b border-gray-100">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-sm">
             <thead>
               <tr className="text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left pb-2">Description</th>
@@ -240,7 +240,7 @@ export default function InvoiceDetailPage({
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Totals */}

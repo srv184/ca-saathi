@@ -56,12 +56,12 @@ export default function ClientsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} total clients</p>
         </div>
-        <Link href="/clients/new" className="btn-primary">
+        <Link href="/clients/new" className="btn-primary w-full sm:w-auto">
           + Add client
         </Link>
       </div>
@@ -101,7 +101,7 @@ export default function ClientsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {["Name", "Type", "GSTIN", "Email", "Portal", "Status"].map(
@@ -164,7 +164,7 @@ export default function ClientsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

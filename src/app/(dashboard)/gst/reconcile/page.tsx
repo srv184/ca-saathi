@@ -85,7 +85,7 @@ function StartReconPageInner() {
   return (
     <div className="max-w-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
             Run GST reconciliation
@@ -94,7 +94,7 @@ function StartReconPageInner() {
             Paste your GSTR-2B and purchase register data below
           </p>
         </div>
-        <Link href="/gst" className="btn-secondary">
+        <Link href="/gst" className="btn-secondary w-full sm:w-auto">
           Cancel
         </Link>
       </div>
@@ -125,7 +125,7 @@ function StartReconPageInner() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {/* GSTIN */}
             <div>
               <label className="label">GSTIN *</label>
@@ -192,7 +192,7 @@ function StartReconPageInner() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? "Processing…" : "Run reconciliation"}
           </button>

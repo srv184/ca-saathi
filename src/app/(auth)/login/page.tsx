@@ -71,7 +71,7 @@ export default function LoginPage() {
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-blue-600 hover:underline">
+        <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-blue-600 hover:underline">
           Forgot password?
         </Link>
       </div>
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
       <p className="text-center text-sm text-gray-500">
         New to CA Saathi?{" "}
-        <Link href="/register" className="text-blue-600 hover:underline">
+        <Link href="/register" className="inline-flex min-h-11 items-center text-blue-600 hover:underline">
           Create account
         </Link>
       </p>

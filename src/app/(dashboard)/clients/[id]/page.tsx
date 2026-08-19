@@ -103,7 +103,7 @@ export default function ClientProfilePage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
             {client.name[0]}
@@ -126,7 +126,7 @@ export default function ClientProfilePage({
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleInvite}
             className="btn-secondary text-sm"
@@ -158,7 +158,7 @@ export default function ClientProfilePage({
           <p className="text-sm font-medium text-green-800 mb-2">
             ✅ Portal invite link generated — valid for 7 days
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               className="input text-xs font-mono flex-1"
               value={inviteUrl}
@@ -181,7 +181,7 @@ export default function ClientProfilePage({
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         {[
           {
             label: "Documents",
@@ -215,7 +215,7 @@ export default function ClientProfilePage({
       </div>
 
       {/* Details */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="card">
           <h3 className="text-base font-medium text-gray-900 mb-4">
             Client details

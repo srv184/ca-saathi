@@ -152,7 +152,7 @@ export default function SettingsPage() {
 
         {editing ? (
           <form onSubmit={handleSave} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="col-span-2">
                 <label className="label">Firm name</label>
                 <input
@@ -231,7 +231,7 @@ export default function SettingsPage() {
             </div>
           </form>
         ) : (
-          <dl className="grid grid-cols-2 gap-4">
+          <dl className="grid gap-4 sm:grid-cols-2">
             {[
               ["Firm name", firm?.name ?? "—"],
               ["Email", firm?.email ?? "—"],

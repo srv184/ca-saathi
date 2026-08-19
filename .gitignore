@@ -16,6 +16,7 @@
 
 # testing
 /coverage
+/responsive-check-output
 
 # next.js
 /.next/

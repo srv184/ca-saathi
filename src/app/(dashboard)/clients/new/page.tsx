@@ -78,7 +78,7 @@ export default function NewClientPage() {
   return (
     <div className="max-w-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
             Add new client
@@ -87,7 +87,7 @@ export default function NewClientPage() {
             Fill in the client details below
           </p>
         </div>
-        <Link href="/clients" className="btn-secondary">
+        <Link href="/clients" className="btn-secondary w-full sm:w-auto">
           Cancel
         </Link>
       </div>
@@ -99,9 +99,9 @@ export default function NewClientPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Name */}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="label">Full name / Company name *</label>
             <input
               className="input"
@@ -223,7 +223,7 @@ export default function NewClientPage() {
           </div>
 
           {/* Services */}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="label">Services engaged</label>
             <div className="flex flex-wrap gap-2 mt-1">
               {SERVICES.map((s) => (
@@ -244,7 +244,7 @@ export default function NewClientPage() {
           </div>
 
           {/* Address */}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="label">Address</label>
             <textarea
               className="input"
@@ -257,7 +257,7 @@ export default function NewClientPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? "Saving…" : "Add client"}
           </button>

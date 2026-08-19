@@ -143,7 +143,7 @@ export default function PortalDashboardPage({
   // PIN screen
   if (locked) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="w-full max-w-sm">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-white">CA Saathi</h1>
@@ -151,7 +151,7 @@ export default function PortalDashboardPage({
               Enter your PIN to continue
             </p>
           </div>
-          <div className="bg-white rounded-2xl shadow-2xl p-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
             <form onSubmit={handleUnlock}>
               <div className="text-center">
                 <p className="text-2xl mb-2">🔐</p>

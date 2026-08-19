@@ -65,18 +65,18 @@ export default function BillingPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Billing</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} total invoices</p>
         </div>
-        <button onClick={() => setShowNew(true)} className="btn-primary">
+        <button onClick={() => setShowNew(true)} className="btn-primary w-full sm:w-auto">
           + Create invoice
         </button>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid gap-4 mb-6 sm:grid-cols-2">
         <div className="rounded-xl p-5 bg-blue-50 text-blue-700">
           <p className="text-xs font-medium uppercase tracking-wide opacity-70">
             Total billed
@@ -96,7 +96,7 @@ export default function BillingPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {[
           { value: "all", label: "All" },
           { value: "DRAFT", label: "Draft" },
@@ -107,7 +107,7 @@ export default function BillingPage() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               filter === f.value
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
@@ -154,7 +154,7 @@ export default function BillingPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {[
@@ -204,7 +204,7 @@ export default function BillingPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>
@@ -271,8 +271,8 @@ function NewInvoiceModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-end bg-black/50 sm:items-center sm:justify-center sm:p-4">
+      <div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:max-w-md sm:rounded-2xl sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Create invoice
         </h2>
@@ -308,7 +308,7 @@ function NewInvoiceModal({
               placeholder="GST filing for FY 2024-25"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Amount (₹) *</label>
               <input
@@ -342,7 +342,7 @@ function NewInvoiceModal({
               placeholder="Optional notes"
             />
           </div>
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <button
               type="submit"
               className="btn-primary flex-1"

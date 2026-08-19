@@ -21,7 +21,7 @@ interface UserInfo {
   firmName: string;
 }
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const path = usePathname();
   const title =
     Object.entries(TITLES).find(
@@ -46,8 +46,11 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
-      <h1 className="text-base font-semibold text-gray-900">{title}</h1>
+    <header className="min-h-14 bg-white border-b border-gray-100 flex items-center justify-between gap-3 px-4 pt-[env(safe-area-inset-top)] sm:px-6 shrink-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <button aria-label="Open navigation" onClick={onMenuClick} className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-gray-700 hover:bg-gray-100 md:hidden">☰</button>
+        <h1 className="truncate text-base font-semibold text-gray-900">{title}</h1>
+      </div>
       <div className="flex items-center gap-4">
         <span className="text-xs text-gray-400 hidden md:block">
           {new Date().toLocaleDateString("en-IN", {
@@ -60,9 +63,9 @@ export default function TopBar() {
         {user && (
           <Link
             href="/settings"
-            className="flex items-center gap-2 hover:opacity-80"
+            className="flex min-h-11 min-w-11 items-center gap-2 rounded-lg hover:opacity-80"
           >
-            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
               {user.name[0]}
             </div>
             <div className="hidden md:block text-right">

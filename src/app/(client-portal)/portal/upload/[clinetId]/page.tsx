@@ -130,7 +130,7 @@ export default function PortalUploadPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50 pb-[env(safe-area-inset-bottom)]">
       {/* Header */}
       <div className="bg-[#0A1628] text-white px-4 py-4">
         <button
@@ -142,7 +142,7 @@ export default function PortalUploadPage({
         <h1 className="text-lg font-semibold">Upload document</h1>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <form onSubmit={handleUpload} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">

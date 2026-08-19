@@ -153,7 +153,7 @@ export default function CalendarPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
             Compliance Calendar
@@ -164,7 +164,7 @@ export default function CalendarPage() {
         </div>
         <button
           onClick={generateTasks}
-          className="btn-primary"
+          className="btn-primary w-full sm:w-auto"
           disabled={generating}
         >
           {generating ? "Generating…" : "⚡ Generate tasks"}
@@ -178,19 +178,19 @@ export default function CalendarPage() {
       )}
 
       {/* Month navigation */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4 sm:gap-4">
         <button
           onClick={prevMonth}
-          className="btn-secondary px-3 py-1.5 text-sm"
+          className="btn-secondary px-3 text-sm"
         >
           ←
         </button>
-        <span className="font-medium text-gray-900 min-w-32 text-center">
+        <span className="min-w-0 flex-1 font-medium text-gray-900 text-center sm:min-w-32">
           {MONTHS[month - 1]} {year}
         </span>
         <button
           onClick={nextMonth}
-          className="btn-secondary px-3 py-1.5 text-sm"
+          className="btn-secondary px-3 text-sm"
         >
           →
         </button>
@@ -199,14 +199,14 @@ export default function CalendarPage() {
             setMonth(now.getMonth() + 1);
             setYear(now.getFullYear());
           }}
-          className="btn-secondary px-3 py-1.5 text-xs ml-2"
+          className="btn-secondary px-3 text-xs sm:ml-2"
         >
           Today
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {[
           { value: "all", label: "All" },
           { value: "PENDING", label: "Pending" },
@@ -215,7 +215,7 @@ export default function CalendarPage() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               filter === f.value
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
@@ -302,7 +302,7 @@ function TaskList({
       {tasks.map((task, i) => (
         <div
           key={task.id}
-          className={`flex items-center gap-4 px-4 py-3 ${
+          className={`flex flex-col items-stretch gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 ${
             i < tasks.length - 1 ? "border-b border-gray-50" : ""
           }`}
         >
@@ -322,14 +322,14 @@ function TaskList({
               {task.description ? ` · ${task.description}` : ""}
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center justify-between gap-3 sm:shrink-0">
             <span className={getDueBadge(task.due_date, task.status)}>
               {getDueLabel(task.due_date, task.status)}
             </span>
             {task.status !== "FILED" && (
               <button
                 onClick={() => onMarkFiled(task.id)}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                className="inline-flex min-h-11 items-center px-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
                 Mark filed
               </button>

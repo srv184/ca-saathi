@@ -79,7 +79,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "Total clients",
@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* AI usage */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="card">
           <h3 className="text-base font-medium text-gray-900 mb-4">AI usage</h3>
           <div className="space-y-3">

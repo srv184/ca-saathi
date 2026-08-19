@@ -83,19 +83,19 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 min-h-16 flex items-center justify-between gap-3">
           <span className="text-xl font-bold text-blue-600">CA Saathi</span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4">
             <Link
               href="#pricing"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="hidden min-h-11 items-center px-2 text-sm text-gray-600 hover:text-gray-900 sm:inline-flex"
             >
               Pricing
             </Link>
-            <Link href="/login" className="btn-secondary text-sm">
+            <Link href="/login" className="btn-secondary px-3 text-sm sm:px-4">
               Sign in
             </Link>
-            <Link href="/register" className="btn-primary text-sm">
+            <Link href="/register" className="btn-primary px-3 text-sm sm:px-4">
               Start free trial
             </Link>
           </div>
@@ -103,22 +103,22 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 pt-20 pb-16 text-center">
+      <section className="max-w-6xl mx-auto px-4 pt-12 pb-12 text-center sm:pt-20 sm:pb-16">
         <div className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full mb-6">
           Built exclusively for Indian Chartered Accountants
         </div>
-        <h1 className="text-5xl font-bold text-gray-900 leading-tight max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-900 leading-tight max-w-3xl mx-auto sm:text-5xl">
           One CA with CA Saathi operates like a{" "}
           <span className="text-blue-600">5-person firm</span>
         </h1>
-        <p className="text-xl text-gray-500 mt-6 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg text-gray-500 mt-6 max-w-2xl mx-auto leading-relaxed sm:text-xl">
           AI-powered notice replies, GST reconciliation, and client document
           management. Built for India. Priced for India.
         </p>
-        <div className="flex items-center justify-center gap-4 mt-8">
+        <div className="flex flex-col items-center justify-center gap-3 mt-8 sm:flex-row sm:gap-4">
           <Link
             href="/register"
-            className="bg-blue-600 text-white px-8 py-4 rounded-xl text-base font-medium hover:bg-blue-700 transition-colors"
+            className="inline-flex min-h-11 w-full items-center justify-center bg-blue-600 text-white px-8 py-4 rounded-xl text-base font-medium hover:bg-blue-700 transition-colors sm:w-auto"
           >
             Start free 30-day trial
           </Link>
@@ -132,7 +132,7 @@ export default function LandingPage() {
       {/* Stats */}
       <section className="bg-blue-600 py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-4 gap-8 text-center text-white">
+          <div className="grid grid-cols-1 gap-6 text-center text-white sm:grid-cols-4 sm:gap-8">
             {[
               { value: "90s", label: "Notice reply drafted" },
               { value: "5 min", label: "GST recon completed" },
@@ -149,14 +149,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
+      <section className="max-w-6xl mx-auto px-4 py-12 sm:py-20">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
           Everything your practice needs
         </h2>
         <p className="text-gray-500 text-center mb-12">
           Six powerful modules. One simple subscription.
         </p>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div
               key={f.title}
@@ -173,12 +173,12 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-12 sm:py-20">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             How Notice AI works
           </h2>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-4 sm:gap-4">
             {[
               {
                 step: "1",
@@ -214,11 +214,11 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
+      <section className="max-w-6xl mx-auto px-4 py-12 sm:py-20">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
           Trusted by Indian CAs
         </h2>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {TESTIMONIALS.map((t) => (
             <div
               key={t.name}
@@ -237,7 +237,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="bg-gray-50 py-20">
+      <section id="pricing" className="bg-gray-50 py-12 sm:py-20">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
             Simple, transparent pricing
@@ -245,11 +245,11 @@ export default function LandingPage() {
           <p className="text-gray-500 text-center mb-12">
             3-year price lock on annual plans. Cancel anytime.
           </p>
-          <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid gap-6 max-w-4xl mx-auto md:grid-cols-3">
             {PRICING.map((p) => (
               <div
                 key={p.name}
-                className={`bg-white rounded-2xl border-2 p-6 relative ${p.color}`}
+                className={`relative bg-white rounded-2xl border-2 p-5 text-center sm:p-6 md:text-left ${p.color}`}
               >
                 {p.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -275,7 +275,7 @@ export default function LandingPage() {
                 </p>
                 <Link
                   href="/register"
-                  className={`block text-center mt-6 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex min-h-11 items-center justify-center text-center mt-6 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     p.popular
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -313,7 +313,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
           <span className="text-gray-500 text-sm">
             © 2026 CA Saathi. Built for Indian CAs.
           </span>

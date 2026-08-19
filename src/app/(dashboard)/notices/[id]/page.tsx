@@ -124,11 +124,11 @@ export default function NoticeDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link
             href="/notices"
-            className="text-sm text-gray-400 hover:text-gray-600 mb-1 inline-block"
+            className="inline-flex min-h-11 items-center text-sm text-gray-400 hover:text-gray-600"
           >
             ← Back to notices
           </Link>
@@ -140,7 +140,7 @@ export default function NoticeDetailPage({
             {notice.assessment_year ?? "—"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span
             className={
               notice.ai_status === "COMPLETED"
@@ -186,7 +186,7 @@ export default function NoticeDetailPage({
       {/* Draft editor */}
       {notice.ai_draft && (
         <div className="card space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-medium text-gray-900">
                 Draft reply
@@ -199,7 +199,7 @@ export default function NoticeDetailPage({
             </div>
             {isReviewed && (
               <button
-                className="btn-primary text-sm"
+                className="btn-primary w-full text-sm sm:w-auto"
                 onClick={() => alert("PDF download coming soon")}
               >
                 Download PDF
@@ -228,13 +228,13 @@ export default function NoticeDetailPage({
           )}
 
           {canReview && (
-            <div className="flex items-start gap-4 pt-2">
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-start sm:gap-4">
               <p className="text-sm text-gray-600 flex-1">
                 Review the draft above. Edit any line freely. When satisfied
                 click "Mark as reviewed" to unlock PDF download.
               </p>
               <button
-                className="btn-primary shrink-0"
+                className="btn-primary w-full shrink-0 sm:w-auto"
                 onClick={handleReview}
                 disabled={saving}
               >
@@ -255,7 +255,7 @@ export default function NoticeDetailPage({
             {notice.ai_citations.map((c, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 text-sm p-3 bg-gray-50 rounded-lg"
+                className="flex flex-col items-start gap-2 text-sm p-3 bg-gray-50 rounded-lg sm:flex-row sm:gap-3"
               >
                 <span className="badge-blue shrink-0">{c.section}</span>
                 <div>

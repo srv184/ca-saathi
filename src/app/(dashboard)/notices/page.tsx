@@ -58,18 +58,18 @@ export default function NoticesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="page-header">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Notice AI</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} total notices</p>
         </div>
-        <Link href="/notices/new" className="btn-primary">
+        <Link href="/notices/new" className="btn-primary w-full sm:w-auto">
           + Upload notice
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {[
           { value: "all", label: "All" },
           { value: "DRAFT", label: "Pending review" },
@@ -79,7 +79,7 @@ export default function NoticesPage() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               filter === f.value
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
@@ -116,7 +116,7 @@ export default function NoticesPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[780px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {[
@@ -182,7 +182,7 @@ export default function NoticesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

@@ -176,7 +176,7 @@ export default function PortalJoinPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -184,7 +184,7 @@ export default function PortalJoinPage({
           <p className="text-blue-300 text-sm mt-1">Secure client portal</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
           {/* Step: Phone */}
           {step === "phone" && (
             <form onSubmit={handleRequestOtp} className="space-y-4">
@@ -268,7 +268,7 @@ export default function PortalJoinPage({
               </button>
               <button
                 type="button"
-                className="w-full text-sm text-blue-600 hover:underline"
+                className="flex min-h-11 w-full items-center justify-center text-sm text-blue-600 hover:underline"
                 onClick={() => {
                   setStep("phone");
                   setOtp("");

@@ -116,18 +116,18 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-gray-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="inline-flex min-h-11 items-center text-blue-600 hover:underline">
           Sign in
         </Link>
       </p>
 
       <p className="text-center text-xs text-gray-400">
         By creating an account you agree to our{" "}
-        <Link href="/terms" className="underline">
+        <Link href="/terms" className="inline-flex min-h-11 items-center underline">
           Terms of Service
         </Link>{" "}
         and{" "}
-        <Link href="/privacy" className="underline">
+        <Link href="/privacy" className="inline-flex min-h-11 items-center underline">
           Privacy Policy
         </Link>
       </p>
