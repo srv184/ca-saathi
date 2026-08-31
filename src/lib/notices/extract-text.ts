@@ -1,8 +1,5 @@
-import { PDFParse } from "pdf-parse";
+import { extractText } from "unpdf";
 import { recognize } from "tesseract.js";
-
-const MAX_OCR_PAGES = 10;
-const MIN_PDF_TEXT_LENGTH = 40;
 
 async function ocrImage(image: Buffer | Uint8Array): Promise<string> {
   const result = await recognize(Buffer.from(image), "eng");
@@ -10,24 +7,10 @@ async function ocrImage(image: Buffer | Uint8Array): Promise<string> {
 }
 
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  try {
-    const text = (await parser.getText()).text.trim();
-    if (text.length >= MIN_PDF_TEXT_LENGTH) return text;
-
-    const screenshots = await parser.getScreenshot({
-      first: MAX_OCR_PAGES,
-      desiredWidth: 1800,
-      imageDataUrl: false,
-      imageBuffer: true,
-    });
-    const pages = await Promise.all(
-      screenshots.pages.map((page) => ocrImage(page.data)),
-    );
-    return pages.filter(Boolean).join("\n\n").trim();
-  } finally {
-    await parser.destroy();
-  }
+  const { text } = await extractText(new Uint8Array(buffer), {
+    mergePages: true,
+  });
+  return text.trim();
 }
 
 export async function extractNoticeText(params: {
