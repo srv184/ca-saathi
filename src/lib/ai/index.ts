@@ -11,7 +11,10 @@ async function chat(params: AiChatParams): Promise<string> {
     );
   }
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  // Environment values are commonly copied with a trailing slash. Normalize
+  // here so the OpenAI-compatible endpoint is not requested as `//chat/...`.
+  const endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,7 +40,13 @@ async function chat(params: AiChatParams): Promise<string> {
   }
 
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content ?? "";
+  const choice = data.choices?.[0];
+  if (choice?.finish_reason === "length") {
+    throw new Error(
+      "AI response was truncated before completion. Please retry the notice draft.",
+    );
+  }
+  const text = choice?.message?.content ?? "";
 
   if (!text) {
     throw new Error("AI returned empty response");
@@ -118,7 +127,9 @@ Return a JSON object with exactly these fields:
 Return only the JSON. No markdown. No explanation.`,
       },
     ],
-    maxTokens: 2000,
+    // Legal drafts regularly exceed the old 2,000-token cap. `chat` detects
+    // any future truncation before attempting to parse partial JSON.
+    maxTokens: 6000,
   });
 
   return parseJson<NoticeReplyResult>(text);

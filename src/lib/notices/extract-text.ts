@@ -1,8 +1,8 @@
 import { extractText } from "unpdf";
-import { recognize } from "tesseract.js";
+import Tesseract from "tesseract.js";
 
 async function ocrImage(image: Buffer | Uint8Array): Promise<string> {
-  const result = await recognize(Buffer.from(image), "eng");
+  const result = await Tesseract.recognize(Buffer.from(image), "eng");
   return result.data.text.trim();
 }
 

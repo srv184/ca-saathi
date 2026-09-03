@@ -7,6 +7,9 @@ import { aiRatelimit } from "@/lib/utils/ratelimit";
 import { downloadBuffer, hashBuffer } from "@/lib/storage/supabase";
 import { extractNoticeText } from "@/lib/notices/extract-text";
 
+// OCR uses worker_threads and WASM, which require the Node.js serverless runtime.
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   try {
     const firmId = req.headers.get("x-firm-id");
@@ -60,10 +63,17 @@ export async function POST(req: NextRequest) {
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
 
-    // Rate limit AI calls per firm
-    const { success: aiAllowed } = await aiRatelimit.limit(firmId);
-    if (!aiAllowed)
-      return err("AI rate limit exceeded. Try again in 1 hour.", 429);
+    // A rate-limit outage must not prevent a notice from being processed.
+    try {
+      const { success: aiAllowed } = await aiRatelimit.limit(firmId);
+      if (!aiAllowed)
+        return err("AI rate limit exceeded. Try again in 1 hour.", 429);
+    } catch (error) {
+      console.error(
+        "[notices/POST] rate limit service unavailable; allowing request",
+        error,
+      );
+    }
 
     const body = await req.json();
     const parsed = CreateNoticeSchema.safeParse(body);
