@@ -95,6 +95,27 @@ export default function NoticeDetailPage({
     }
   }
 
+  async function handleGenerate() {
+    setSaving(true);
+    setMsg("");
+    try {
+      const res = await fetch(`/api/notices/${params.id}/generate`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(data.error ?? "Failed to generate the AI reply");
+        return;
+      }
+      setNotice(data.data);
+      setReply(data.data.ai_draft ?? "");
+    } catch {
+      setMsg("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center pt-20">
@@ -170,6 +191,28 @@ export default function NoticeDetailPage({
               This takes 30–90 seconds. Page updates automatically.
             </p>
           </div>
+          <button
+            className="btn-secondary ml-auto shrink-0 text-sm"
+            onClick={handleGenerate}
+            disabled={saving}
+          >
+            {saving ? "Generating…" : "Restart draft"}
+          </button>
+        </div>
+      )}
+
+      {notice.ai_status === "FAILED" && (
+        <div className="card flex items-center justify-between gap-4">
+          <p className="text-sm text-red-700">
+            AI could not complete the draft. You can safely try again.
+          </p>
+          <button
+            className="btn-primary shrink-0 text-sm"
+            onClick={handleGenerate}
+            disabled={saving}
+          >
+            {saving ? "Generating…" : "Retry draft"}
+          </button>
         </div>
       )}
 

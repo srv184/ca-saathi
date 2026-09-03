@@ -9,6 +9,7 @@ import { extractNoticeText } from "@/lib/notices/extract-text";
 
 // OCR uses worker_threads and WASM, which require the Node.js serverless runtime.
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
   try {
@@ -137,17 +138,15 @@ export async function POST(req: NextRequest) {
       data: { step_upload_notice: true },
     });
 
-    // Process AI in background — do not await
-    // This returns immediately to the CA
-    processNoticeAi({
+    // Serverless functions can terminate as soon as a response is returned.
+    // Await this work so a notice cannot be left in PROCESSING indefinitely.
+    await processNoticeAi({
       noticeId: notice.id,
       noticeText: ocrText,
       noticeType,
       clientName: client.name,
       firmName: client.firm.name,
       assessmentYear,
-    }).catch((error) => {
-      console.error("[notices/ai-process]", error);
     });
 
     return created(notice);
