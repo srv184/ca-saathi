@@ -17,8 +17,6 @@ const PUBLIC_PATHS = [
   "/portal",
   "/_next",
   "/favicon.ico",
-  // Protected by QUEUE_CONSUMER_SECRET header check in the route handler, not user session — see route.ts.
-  "/api/queues/client-document-extraction",
 ];
 
 function isPublicPath(pathname: string): boolean {

@@ -1,15 +1,10 @@
 {
   "functions": {
-    "app/api/queues/client-document-extraction/route.ts": {
-      "maxDuration": 300,
-      "experimentalTriggers": [
-        {
-          "type": "queue/v2beta",
-          "topic": "client-document-extraction",
-          "retryAfterSeconds": 60,
-          "initialDelaySeconds": 0
-        }
-      ]
+    "src/app/api/client-documents/confirm/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/client-documents/[id]/retry/route.ts": {
+      "maxDuration": 300
     }
   }
 }

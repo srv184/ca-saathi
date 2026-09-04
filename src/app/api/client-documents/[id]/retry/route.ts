@@ -1,14 +1,20 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { err, ok } from "@/lib/utils/api";
-import { enqueueClientDocument } from "@/lib/client-documents/queue";
+import { processClientDocument } from "@/lib/client-documents/process";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export const maxDuration = 300;
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
+    const { id } = await params;
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
     const document = await prisma.clientDocument.findFirst({
-      where: { id: params.id, client: { firm_id: firmId, deleted_at: null } },
+      where: { id, client: { firm_id: firmId, deleted_at: null } },
       select: { id: true, extraction_status: true },
     });
     if (!document) return err("Document not found", 404);
@@ -18,7 +24,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       where: { id: document.id },
       data: { extraction_status: "PENDING", extraction_failure_reason: null },
     });
-    await enqueueClientDocument(document.id);
+
+    after(async () => {
+      try {
+        await processClientDocument(document.id);
+      } catch (processError) {
+        console.error(`[client-documents/retry] background extraction failed for ${document.id}:`, processError);
+      }
+    });
+
     return ok({ documentId: document.id, extractionStatus: "PENDING" });
   } catch (error) {
     console.error("[client-documents/retry]", error);

@@ -5,15 +5,16 @@ import { deleteFile } from "@/lib/storage/supabase";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
 
     const document = await prisma.clientDocument.findFirst({
       where: {
-        id: params.id,
+        id,
         client: { firm_id: firmId, deleted_at: null },
       },
     });
@@ -28,15 +29,16 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const firmId = req.headers.get("x-firm-id");
     if (!firmId) return err("Unauthorized", 401);
 
     const document = await prisma.clientDocument.findFirst({
       where: {
-        id: params.id,
+        id,
         client: { firm_id: firmId, deleted_at: null },
       },
       select: {

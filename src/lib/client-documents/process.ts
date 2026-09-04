@@ -121,7 +121,9 @@ export async function processClientDocument(documentId: string): Promise<void> {
       document.id,
       safeFilename(document.original_filename),
     );
-    await copyFile(document.storage_path, finalPath);
+    if (finalPath !== document.storage_path) {
+      await copyFile(document.storage_path, finalPath);
+    }
 
     await prisma.clientDocument.update({
       where: { id: document.id },
@@ -143,14 +145,16 @@ export async function processClientDocument(documentId: string): Promise<void> {
       },
     });
 
-    try {
-      await deleteFile(document.storage_path);
-    } catch (cleanupError) {
-      console.error("[client-documents] temporary storage cleanup failed", {
-        documentId: document.id,
-        storagePath: document.storage_path,
-        error: errorMessage(cleanupError),
-      });
+    if (finalPath !== document.storage_path) {
+      try {
+        await deleteFile(document.storage_path);
+      } catch (cleanupError) {
+        console.error("[client-documents] temporary storage cleanup failed", {
+          documentId: document.id,
+          storagePath: document.storage_path,
+          error: errorMessage(cleanupError),
+        });
+      }
     }
 
     if (status === "DONE" && classification.documentPeriod) {

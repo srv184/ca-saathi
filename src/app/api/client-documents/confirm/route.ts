@@ -1,8 +1,10 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { err, ok, validationError } from "@/lib/utils/api";
 import { ConfirmClientDocumentsUploadSchema } from "@/lib/utils/validators";
-import { enqueueClientDocument } from "@/lib/client-documents/queue";
+import { processClientDocument } from "@/lib/client-documents/process";
+
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,10 +21,20 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true },
     });
-    await Promise.all(documents.map((document) => enqueueClientDocument(document.id)));
+
+    for (const document of documents) {
+      after(async () => {
+        try {
+          await processClientDocument(document.id);
+        } catch (processError) {
+          console.error(`[client-documents/confirm] background extraction failed for ${document.id}:`, processError);
+        }
+      });
+    }
+
     return ok({ queuedDocumentIds: documents.map((document) => document.id) });
   } catch (error) {
     console.error("[client-documents/confirm]", error);
-    return err("Files were stored but could not be queued for extraction. Please retry.", 503);
+    return err("Files were stored but could not be scheduled for extraction. Please retry.", 503);
   }
 }
