@@ -7,6 +7,7 @@ export interface AiChatParams {
   system: string;
   messages: AiMessage[];
   maxTokens: number;
+  reasoningEffort?: "none" | "low" | "medium" | "high";
 }
 
 export interface NoticeReplyResult {

@@ -116,6 +116,20 @@ export const CreateNoticeSchema = z.object({
     .regex(/^[a-f0-9]{64}$/i, "Notice file hash must be a SHA-256 hash"),
 });
 
+export const PrepareClientDocumentsUploadSchema = z.object({
+  clientId: z.string().uuid(),
+  files: z.array(z.object({
+    filename: z.string().min(1).max(200),
+    contentType: z.string().max(200).default("application/octet-stream"),
+    fileSizeBytes: z.number().int().positive().max(25 * 1024 * 1024),
+    fileHash: z.string().regex(/^[a-f0-9]{64}$/i, "File hash must be a SHA-256 hash"),
+  })).min(1).max(25),
+});
+
+export const ConfirmClientDocumentsUploadSchema = z.object({
+  documentIds: z.array(z.string().uuid()).min(1).max(25),
+});
+
 export const ReviewNoticeSchema = z.object({
   editedReply: z.string().min(10, "Reply is too short"),
 });

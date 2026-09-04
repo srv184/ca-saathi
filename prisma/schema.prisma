@@ -62,7 +62,23 @@ enum DocumentType {
   GST_NOTICE
   TDS_CERTIFICATE
   INVOICE
+  GST_RETURN
+  FORM_26AS
+  ITR_ACKNOWLEDGMENT
+  NOTICE
+  LEDGER
+  AADHAR_CARD
+  PROFIT_LOSS_STATEMENT
+  AUDIT_REPORT
   OTHER
+}
+
+enum DocumentExtractionStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+  NEEDS_REVIEW
 }
 
 enum DocumentSource {
@@ -175,6 +191,7 @@ model User {
   audit_logs        AuditLog[]
   support_tickets   SupportTicket[]
   document_requests DocumentRequest[]
+  uploaded_client_documents ClientDocument[] @relation("ClientDocumentUploader")
 
   @@index([firm_id])
   @@map("users")
@@ -265,6 +282,7 @@ model Client {
   portal_invites    PortalInvite[]
   document_requests DocumentRequest[]
   compliance_tasks  ComplianceTask[]
+  client_documents  ClientDocument[]
 
   @@index([firm_id, deleted_at])
   @@index([firm_id, status])
@@ -297,6 +315,37 @@ model Document {
   @@index([client_id, doc_type])
   @@index([file_hash])
   @@map("documents")
+}
+
+model ClientDocument {
+  id                        String                   @id @default(uuid())
+  client_id                 String
+  client                    Client                   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  uploaded_by_user_id       String
+  uploaded_by_user          User                     @relation("ClientDocumentUploader", fields: [uploaded_by_user_id], references: [id])
+  storage_path              String                   @unique
+  original_filename         String
+  mime_type                 String
+  file_size_bytes           Int
+  file_hash                 String
+  document_type             DocumentType             @default(OTHER)
+  document_period           String?
+  extracted_document_date   DateTime?
+  extraction_status         DocumentExtractionStatus @default(PENDING)
+  extraction_confidence     Float?
+  extraction_failure_reason String?
+  extracted_metadata        Json?
+  is_latest_version         Boolean                  @default(false)
+  supersedes_document_id    String?
+  supersedes_document       ClientDocument?          @relation("ClientDocumentVersions", fields: [supersedes_document_id], references: [id])
+  superseded_by_documents   ClientDocument[]         @relation("ClientDocumentVersions")
+  uploaded_at               DateTime                 @default(now())
+  updated_at                DateTime                 @updatedAt
+
+  @@unique([client_id, file_hash])
+  @@index([client_id, document_type, document_period])
+  @@index([client_id, extraction_status])
+  @@map("client_documents")
 }
 
 model Notice {
