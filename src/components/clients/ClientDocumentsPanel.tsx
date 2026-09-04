@@ -15,7 +15,7 @@ type ClientDocument = {
   uploaded_at: string;
 };
 
-type BatchItem = { filename: string; state: string; error?: string };
+type BatchItem = { filename: string; state: string; documentId?: string; error?: string };
 
 const TYPE_LABELS: Record<string, string> = {
   GST_RETURN: "GST Return", INVOICE: "Invoice", BANK_STATEMENT: "Bank Statement",
@@ -87,6 +87,12 @@ export function ClientDocumentsPanel({ clientId }: { clientId: string }) {
 
       const accepted = prepared.data.accepted as { documentId: string; filename: string; fileHash: string; uploadUrl: string }[];
       const duplicateNames = new Set((prepared.data.duplicates as { filename: string }[]).map((item) => item.filename));
+      setBatch((current) =>
+        current.map((row) => {
+          const item = accepted.find((acc) => acc.filename === row.filename);
+          return item ? { ...row, documentId: item.documentId } : row;
+        }),
+      );
       const byHash = new Map(fileDetails.map((details, index) => [details.fileHash, files[index]]));
       const uploadedIds: string[] = [];
       await Promise.all(accepted.map(async (item) => {
@@ -120,6 +126,25 @@ export function ClientDocumentsPanel({ clientId }: { clientId: string }) {
     }
   }
 
+  async function cancelUpload(documentId: string) {
+    try {
+      const response = await fetch(`/api/client-documents/${documentId}`, { method: "DELETE" });
+      if (response.ok) {
+        setBatch((current) =>
+          current.map((row) =>
+            row.documentId === documentId ? { ...row, state: "Cancelled" } : row,
+          ),
+        );
+        await loadDocuments();
+      } else {
+        const body = await response.json();
+        setError(body.error ?? "Failed to cancel upload");
+      }
+    } catch {
+      setError("Failed to cancel upload");
+    }
+  }
+
   async function retry(documentId: string) {
     const response = await fetch(`/api/client-documents/${documentId}/retry`, { method: "POST" });
     if (response.ok) await loadDocuments();
@@ -136,7 +161,7 @@ export function ClientDocumentsPanel({ clientId }: { clientId: string }) {
         <div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-semibold">Upload documents</h2><p className="mt-1 text-sm text-gray-500">Select up to 25 files (25 MB each). Files are classified in the background.</p></div><button onClick={() => setIsOpen(false)} aria-label="Close">×</button></div>
         <input className="input mt-5" type="file" multiple onChange={onFilesSelected} />
         {files.length > 0 && <p className="mt-2 text-sm text-gray-600">{files.length} file{files.length === 1 ? "" : "s"} selected</p>}
-        {batch.length > 0 && <ul className="mt-4 max-h-40 space-y-1 overflow-auto text-sm">{batch.map((item) => <li key={item.filename} className="flex justify-between gap-3"><span className="truncate">{item.filename}</span><span className="shrink-0 text-gray-500">{item.state}</span></li>)}</ul>}
+        {batch.length > 0 && <ul className="mt-4 max-h-40 space-y-1 overflow-auto text-sm">{batch.map((item) => <li key={item.filename} className="flex items-center justify-between gap-3 rounded bg-gray-50 px-2 py-1 text-xs"><span className="truncate text-gray-800">{item.filename}</span><div className="flex items-center gap-2 shrink-0"><span className="text-gray-500">{item.state}</span>{item.documentId && item.state !== "Cancelled" && <button type="button" className="text-xs font-medium text-red-600 hover:text-red-800" onClick={() => void cancelUpload(item.documentId!)}>Cancel</button>}</div></li>)}</ul>}
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         <div className="mt-5 flex justify-end gap-2"><button className="btn-secondary text-sm" disabled={uploading} onClick={() => setIsOpen(false)}>Close</button><button className="btn-primary text-sm" disabled={!files.length || uploading} onClick={() => void upload()}>{uploading ? "Uploading…" : "Upload"}</button></div>
       </div>
@@ -148,7 +173,7 @@ export function ClientDocumentsPanel({ clientId }: { clientId: string }) {
         const older = entries.filter((document) => document.id !== latest?.id);
         return <details key={type} className="rounded-lg border border-gray-100 p-3" open={entries.some((document) => document.extraction_status !== "DONE")}>
           <summary className="cursor-pointer font-medium text-gray-800">{TYPE_LABELS[type] ?? type} <span className="ml-1 text-sm font-normal text-gray-500">({entries.length})</span></summary>
-          <div className="mt-3 space-y-2">{[...(latest ? [latest] : []), ...older].map((document) => <div key={document.id} className="flex flex-col gap-2 rounded-md bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="truncate text-sm font-medium text-gray-800">{document.original_filename} {document.is_latest_version && <span className="badge-green ml-1">Latest</span>}</p><p className="text-xs text-gray-500">{document.document_period ?? "Period pending review"}{document.extracted_document_date ? ` · ${new Date(document.extracted_document_date).toLocaleDateString("en-IN")}` : ""}</p>{document.extraction_failure_reason && <p className="text-xs text-red-600">{document.extraction_failure_reason}</p>}</div><div className="flex items-center gap-2"><span className={STATUS_CLASS[document.extraction_status]}>{document.extraction_status.replace(/_/g, " ")}</span>{document.extraction_status === "FAILED" && <button className="btn-secondary text-xs" onClick={() => void retry(document.id)}>Retry</button>}</div></div>)}</div>
+          <div className="mt-3 space-y-2">{[...(latest ? [latest] : []), ...older].map((document) => <div key={document.id} className="flex flex-col gap-2 rounded-md bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="truncate text-sm font-medium text-gray-800">{document.original_filename} {document.is_latest_version && <span className="badge-green ml-1">Latest</span>}</p><p className="text-xs text-gray-500">{document.document_period ?? "Period pending review"}{document.extracted_document_date ? ` · ${new Date(document.extracted_document_date).toLocaleDateString("en-IN")}` : ""}</p>{document.extraction_failure_reason && <p className="text-xs text-red-600">{document.extraction_failure_reason}</p>}</div><div className="flex items-center gap-2"><span className={STATUS_CLASS[document.extraction_status]}>{document.extraction_status.replace(/_/g, " ")}</span>{(document.extraction_status === "PENDING" || document.extraction_status === "PROCESSING") && <button className="btn-secondary text-xs text-red-600 hover:text-red-700 hover:border-red-200" onClick={() => void cancelUpload(document.id)} title="Cancel upload">Cancel</button>}{document.extraction_status === "FAILED" && <button className="btn-secondary text-xs" onClick={() => void retry(document.id)}>Retry</button>}</div></div>)}</div>
         </details>;
       })}
     </div>
