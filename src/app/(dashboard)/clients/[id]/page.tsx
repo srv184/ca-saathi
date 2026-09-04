@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ClientDocumentsPanel } from "@/components/clients/ClientDocumentsPanel";
 
 interface Client {
   id: string;
@@ -264,6 +265,8 @@ export default function ClientProfilePage({
           )}
         </div>
       </div>
+
+      <ClientDocumentsPanel clientId={client.id} />
     </div>
   );
 }

@@ -36,6 +36,15 @@ export async function getDownloadUrl(key: string): Promise<string> {
   return data.signedUrl;
 }
 
+export function buildClientDocumentStorageKey(
+  clientId: string,
+  documentType: string,
+  documentId: string,
+  filename: string,
+): string {
+  return `clients/${clientId}/${documentType}/${documentId}-${filename}`;
+}
+
 export async function downloadBuffer(key: string): Promise<Buffer> {
   const { data, error } = await supabase.storage.from(BUCKET).download(key);
 
@@ -46,6 +55,11 @@ export async function downloadBuffer(key: string): Promise<Buffer> {
 export async function deleteFile(key: string): Promise<void> {
   const { error } = await supabase.storage.from(BUCKET).remove([key]);
   if (error) throw new Error(`Delete failed: ${error.message}`);
+}
+
+export async function copyFile(sourceKey: string, destinationKey: string): Promise<void> {
+  const { error } = await supabase.storage.from(BUCKET).copy(sourceKey, destinationKey);
+  if (error) throw new Error(`Storage copy failed: ${error.message}`);
 }
 
 export async function hashBuffer(buffer: Buffer): Promise<string> {
